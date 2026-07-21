@@ -132,6 +132,9 @@ export const payouts = sqliteTable("payouts", {
   amount: integer("amount").notNull(),
   status: text("status").notNull().default("PENDING"),
   providerReference: text("provider_reference"),
+  processedAt: integer("processed_at", { mode: "timestamp_ms" }),
+  paidAt: integer("paid_at", { mode: "timestamp_ms" }),
+  failureCode: text("failure_code"),
   version: integer("version").notNull().default(1),
   ...timestamps,
 }, (table) => [index("payout_status_idx").on(table.status), index("payout_worker_idx").on(table.workerUserId)]);
@@ -148,6 +151,44 @@ export const ledgerEntries = sqliteTable("ledger_entries", {
   reference: text("reference").notNull(),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 }, (table) => [index("ledger_job_idx").on(table.jobId, table.createdAt), uniqueIndex("ledger_reference_idx").on(table.reference)]);
+
+export const disputes = sqliteTable("disputes", {
+  id: text("id").primaryKey(),
+  assignmentId: text("assignment_id").notNull().references(() => jobAssignments.id),
+  jobId: text("job_id").notNull().references(() => jobs.id),
+  openedByUserId: text("opened_by_user_id").notNull().references(() => users.id),
+  category: text("category").notNull(),
+  reason: text("reason").notNull(),
+  status: text("status").notNull().default("OPEN"),
+  assignedToUserId: text("assigned_to_user_id").references(() => users.id),
+  resolution: text("resolution"),
+  resolutionNote: text("resolution_note"),
+  resolvedAt: integer("resolved_at", { mode: "timestamp_ms" }),
+  version: integer("version").notNull().default(1),
+  ...timestamps,
+}, (table) => [index("dispute_status_idx").on(table.status, table.createdAt), uniqueIndex("dispute_open_assignment_idx").on(table.assignmentId, table.status)]);
+
+export const disputeMessages = sqliteTable("dispute_messages", {
+  id: text("id").primaryKey(),
+  disputeId: text("dispute_id").notNull().references(() => disputes.id),
+  senderUserId: text("sender_user_id").notNull().references(() => users.id),
+  visibility: text("visibility").notNull().default("PUBLIC"),
+  message: text("message").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [index("dispute_message_idx").on(table.disputeId, table.createdAt)]);
+
+export const reconciliationRecords = sqliteTable("reconciliation_records", {
+  id: text("id").primaryKey(),
+  type: text("type").notNull(),
+  providerReference: text("provider_reference").notNull(),
+  internalReference: text("internal_reference").notNull(),
+  status: text("status").notNull(),
+  expectedAmount: integer("expected_amount").notNull(),
+  actualAmount: integer("actual_amount").notNull(),
+  variance: integer("variance").notNull(),
+  resolvedAt: integer("resolved_at", { mode: "timestamp_ms" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [uniqueIndex("reconciliation_provider_idx").on(table.providerReference), index("reconciliation_status_idx").on(table.status, table.createdAt)]);
 
 export const auditLogs = sqliteTable("audit_logs", {
   id: text("id").primaryKey(),

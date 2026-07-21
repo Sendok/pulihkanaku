@@ -36,9 +36,9 @@ test("vertical slice contracts exist and remain audited", async () => {
     readFile(new URL("../app/api/v1/jobs/[id]/transition/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../lib/domain/job-state-machine.ts", import.meta.url), "utf8"),
   ]);
-  for (const entity of ["jobs", "job_applications", "job_assignments", "assignment_attendance", "assignment_evidence", "assignment_reviews", "payment_transactions", "ledger_entries", "payouts", "audit_logs"]) assert.match(schema, new RegExp(entity));
+  for (const entity of ["jobs", "job_applications", "job_assignments", "assignment_attendance", "assignment_evidence", "assignment_reviews", "payment_transactions", "ledger_entries", "payouts", "disputes", "dispute_messages", "reconciliation_records", "audit_logs"]) assert.match(schema, new RegExp(entity));
   assert.match(transition, /expectedVersion/); assert.match(transition, /audit_logs/); assert.match(stateMachine, /PENDING_FUNDING/); assert.match(stateMachine, /COMPLETED/);
-  for (const route of ["jobs/[id]/applications", "applications/[id]/accept", "assignments/[id]/check-in", "assignments/[id]/evidence", "assignments/[id]/submit", "assignments/[id]/approve", "assignments/[id]/reviews"]) await access(new URL(`../app/api/v1/${route}/route.ts`, import.meta.url));
+  for (const route of ["jobs/[id]/applications", "applications/[id]/accept", "assignments/[id]/check-in", "assignments/[id]/check-out", "assignments/[id]/evidence", "assignments/[id]/submit", "assignments/[id]/request-revision", "assignments/[id]/approve", "assignments/[id]/disputes", "assignments/[id]/reviews", "disputes/[id]/messages", "disputes/[id]/resolve", "payouts/[id]/mock-process", "payouts/[id]/mock-complete"]) await access(new URL(`../app/api/v1/${route}/route.ts`, import.meta.url));
 });
 
 test("funded job completes worker-to-payout workflow", { timeout: 60_000 }, async () => {
@@ -57,10 +57,24 @@ test("funded job completes worker-to-payout workflow", { timeout: 60_000 }, asyn
     const accepted = await api(`/api/v1/applications/${application.id}/accept`, { user: business });
     await api(`/api/v1/assignments/${accepted.assignmentId}/check-in`, { user: worker, body: { method: "PIN", latitude: -8.0436, longitude: 111.908 } });
     await api(`/api/v1/assignments/${accepted.assignmentId}/evidence`, { user: worker, body: { type: "WORK_RESULT", note: "Packing selesai dan jumlah sudah diperiksa." } });
+    await api(`/api/v1/assignments/${accepted.assignmentId}/check-out`, { user: worker, body: { method: "PIN", latitude: -8.0436, longitude: 111.908 } });
     const submitted = await api(`/api/v1/assignments/${accepted.assignmentId}/submit`, { user: worker });
     assert.equal(submitted.status, "SUBMITTED");
+    const revision = await api(`/api/v1/assignments/${accepted.assignmentId}/request-revision`, { user: business, body: { reason: "Tambahkan catatan jumlah paket per kategori." } });
+    assert.equal(revision.status, "IN_PROGRESS");
+    await api(`/api/v1/assignments/${accepted.assignmentId}/evidence`, { user: worker, body: { type: "CHECKLIST", note: "Jumlah paket per kategori sudah ditambahkan." } });
+    await api(`/api/v1/assignments/${accepted.assignmentId}/submit`, { user: worker });
     const approved = await api(`/api/v1/assignments/${accepted.assignmentId}/approve`, { user: business });
     assert.deepEqual({ status: approved.status, payout: approved.payout.status, amount: approved.payout.amount }, { status: "APPROVED", payout: "SCHEDULED", amount: 160000 });
+    const dispute = await api(`/api/v1/assignments/${accepted.assignmentId}/disputes`, { user: worker, body: { category: "PAYMENT", reason: "Nominal payout perlu dipastikan sebelum pencairan diproses." } });
+    assert.equal(dispute.payoutStatus, "ON_HOLD");
+    await api(`/api/v1/disputes/${dispute.id}/messages`, { user: business, body: { message: "Nominal sudah sesuai dengan kesepakatan pekerjaan." } });
+    const resolved = await api(`/api/v1/disputes/${dispute.id}/resolve`, { user: "admin@pulihkanaku.local", body: { decision: "WORKER", note: "Bukti menunjukkan nominal pekerja sesuai dan payout dapat dilanjutkan." } });
+    assert.equal(resolved.payout.status, "SCHEDULED");
+    const processing = await api(`/api/v1/payouts/${approved.payout.id}/mock-process`, { headers: { "x-mock-signature": "local-development-only" } });
+    assert.equal(processing.status, "PROCESSING");
+    const completed = await api(`/api/v1/payouts/${approved.payout.id}/mock-complete`, { headers: { "x-mock-signature": "local-development-only" } });
+    assert.deepEqual({ status: completed.status, reconciliation: completed.reconciliationStatus }, { status: "PAID", reconciliation: "MATCHED" });
     await api(`/api/v1/assignments/${accepted.assignmentId}/reviews`, { user: worker, body: { rating: 5, tags: ["Bayaran jelas"] } });
     await api(`/api/v1/assignments/${accepted.assignmentId}/reviews`, { user: business, body: { rating: 5, tags: ["Tepat waktu"] } });
   } finally {

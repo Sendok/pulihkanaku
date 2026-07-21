@@ -21,13 +21,14 @@ Terakhir diperbarui: 21 Juli 2026 (Asia/Jakarta)
 - Identity-to-role mapping dari database; header role client tidak dipercaya.
 - Vertical slice API: invoice pendanaan, apply, accept, check-in, evidence, submit, approve, scheduled payout, ledger, dan review dua arah.
 - End-to-end API test menjalankan alur business-to-worker-to-payout menggunakan database lokal nyata.
+- Check-out wajib sebelum submit, request revision, dispute messaging/resolution, payout hold, processing, completion, dan reconciliation.
 
 ## Sedang dikerjakan berikutnya
 
 - Migrasi domain core ke monorepo pnpm/Turborepo dan service NestJS.
 - Adapter PostgreSQL, BullMQ, Redis, MinIO, serta Docker Compose.
 - OTP/session, membership-backed role, onboarding, dan verification submission.
-- Check-out, revision request, dispute branch, payout processor, serta reconciliation.
+- Payout provider berizin, webhook production, retry queue, failure handling, dan manual reconciliation UI.
 
 ## Belum selesai
 

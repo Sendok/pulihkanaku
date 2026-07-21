@@ -10,6 +10,9 @@ const permissions = {
   "assignment:work": ["WORKER"],
   "assignment:approve": ["BUSINESS_OWNER", "BUSINESS_STAFF", "BUSINESS_HR", "OPERATIONS_ADMIN", "SUPER_ADMIN"],
   "review:create": ["WORKER", "BUSINESS_OWNER", "BUSINESS_STAFF", "BUSINESS_HR"],
+  "dispute:create": ["WORKER", "BUSINESS_OWNER", "BUSINESS_STAFF", "BUSINESS_HR"],
+  "dispute:resolve": ["SUPPORT_AGENT", "OPERATIONS_ADMIN", "SUPER_ADMIN"],
+  "payout:process": ["FINANCE_ADMIN", "SUPER_ADMIN"],
   "verification:review": ["VERIFICATION_AGENT", "OPERATIONS_ADMIN", "SUPER_ADMIN"],
   "payout:override": ["FINANCE_ADMIN", "SUPER_ADMIN"],
 } as const satisfies Record<string, readonly Role[]>;

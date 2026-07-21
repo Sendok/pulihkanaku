@@ -5,6 +5,7 @@ import { calculateMatchingScore } from "../lib/domain/matching.ts";
 import { calculatePaymentQuote } from "../lib/domain/payment.ts";
 import { can } from "../lib/domain/authorization.ts";
 import { assertApplicationTransition, assertAssignmentTransition } from "../lib/domain/assignment-state-machine.ts";
+import { assertDisputeTransition, assertPayoutTransition } from "../lib/domain/finance-state-machine.ts";
 
 test("job state machine accepts the funded publish path", () => {
   assert.doesNotThrow(() => assertJobTransition("PENDING_FUNDING", "PUBLISHED"));
@@ -34,4 +35,12 @@ test("application and assignment workflow blocks skipped steps", () => {
   assert.doesNotThrow(() => assertApplicationTransition("SUBMITTED", "ACCEPTED"));
   assert.doesNotThrow(() => assertAssignmentTransition("CONFIRMED", "IN_PROGRESS"));
   assert.throws(() => assertAssignmentTransition("CONFIRMED", "APPROVED"), /ASSIGNMENT_INVALID_TRANSITION/);
+});
+
+test("finance workflow enforces payout hold and dispute resolution", () => {
+  assert.doesNotThrow(() => assertPayoutTransition("SCHEDULED", "PROCESSING"));
+  assert.doesNotThrow(() => assertPayoutTransition("ON_HOLD", "SCHEDULED"));
+  assert.throws(() => assertPayoutTransition("SCHEDULED", "PAID"), /PAYOUT_INVALID_TRANSITION/);
+  assert.doesNotThrow(() => assertDisputeTransition("OPEN", "RESOLVED_WORKER"));
+  assert.throws(() => assertDisputeTransition("CLOSED", "UNDER_REVIEW"), /DISPUTE_INVALID_TRANSITION/);
 });
