@@ -22,6 +22,7 @@ Terakhir diperbarui: 21 Juli 2026 (Asia/Jakarta)
 - Vertical slice API: invoice pendanaan, apply, accept, check-in, evidence, submit, approve, scheduled payout, ledger, dan review dua arah.
 - End-to-end API test menjalankan alur business-to-worker-to-payout menggunakan database lokal nyata.
 - Check-out wajib sebelum submit, request revision, dispute messaging/resolution, payout hold, processing, completion, dan reconciliation.
+- Authentication gate resmi, registrasi worker/business, database-backed role redirect, protected dashboard routes, versioned consent, dan E.164 phone normalization.
 
 ## Sedang dikerjakan berikutnya
 

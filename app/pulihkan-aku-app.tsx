@@ -191,7 +191,7 @@ function JobDetail({ job, applied, onClose, onApply }: { job: Job; applied: bool
   );
 }
 
-function WorkerDashboard({ onBack }: { onBack: () => void }) {
+function WorkerDashboard({ onBack, displayName = "Pengguna" }: { onBack: () => void; displayName?: string }) {
   const [selected, setSelected] = useState<Job | null>(null);
   const [saved, setSaved] = useState<string[]>([]);
   const [applied, setApplied] = useState<string[]>([]);
@@ -201,11 +201,11 @@ function WorkerDashboard({ onBack }: { onBack: () => void }) {
     <div className="product-shell">
       <header className="product-header">
         <Logo />
-        <div className="header-actions"><button className="icon-button" aria-label="Notifikasi"><Bell size={20} /></button><button className="profile-chip"><span>AR</span><span><small>Akun pekerja</small>Arini Rahma</span><ChevronDown size={16} /></button></div>
+        <div className="header-actions"><button className="icon-button" aria-label="Notifikasi"><Bell size={20} /></button><button className="profile-chip" onClick={() => window.location.assign("/signout-with-chatgpt?return_to=/")}><span>{displayName.slice(0,2).toUpperCase()}</span><span><small>Akun pekerja</small>{displayName}</span><ChevronDown size={16} /></button></div>
       </header>
       <main className="dashboard-main">
         <section className="welcome-row">
-          <div><button className="back-link" onClick={onBack}>← Kembali ke halaman utama</button><p className="eyebrow">Selasa, 21 Juli</p><h1>Selamat pagi, Arini.</h1><p>Mari cari peluang yang paling sesuai hari ini.</p></div>
+          <div><button className="back-link" onClick={onBack}>← Kembali ke halaman utama</button><p className="eyebrow">Ruang pekerja</p><h1>Selamat datang, {displayName}.</h1><p>Mari cari peluang yang paling sesuai hari ini.</p></div>
           <div className="profile-progress"><div className="progress-ring">80<span>%</span></div><div><strong>Profilmu hampir lengkap</strong><span>Tambahkan rekening payout</span></div><ArrowRight /></div>
         </section>
         <section className="stats-grid">
@@ -229,13 +229,13 @@ function WorkerDashboard({ onBack }: { onBack: () => void }) {
   );
 }
 
-function BusinessDashboard({ onBack }: { onBack: () => void }) {
+function BusinessDashboard({ onBack, displayName = "Bisnis Anda" }: { onBack: () => void; displayName?: string }) {
   const [published, setPublished] = useState(false);
   return (
     <div className="product-shell business-shell">
-      <header className="product-header"><Logo /><div className="header-actions"><button className="icon-button" aria-label="Notifikasi"><Bell size={20} /></button><button className="profile-chip"><span>KH</span><span><small>Akun bisnis</small>Kirana Home Living</span><ChevronDown size={16} /></button></div></header>
+      <header className="product-header"><Logo /><div className="header-actions"><button className="icon-button" aria-label="Notifikasi"><Bell size={20} /></button><button className="profile-chip" onClick={() => window.location.assign("/signout-with-chatgpt?return_to=/")}><span>{displayName.slice(0,2).toUpperCase()}</span><span><small>Akun bisnis</small>{displayName}</span><ChevronDown size={16} /></button></div></header>
       <main className="dashboard-main">
-        <section className="welcome-row"><div><button className="back-link" onClick={onBack}>← Kembali ke halaman utama</button><p className="eyebrow">Dashboard bisnis</p><h1>Selamat pagi, Kirana.</h1><p>Semua kebutuhan tenaga hari ini dalam kendali.</p></div><button className="primary-button" onClick={() => setPublished(true)}><BriefcaseBusiness size={18} /> Buat pekerjaan</button></section>
+        <section className="welcome-row"><div><button className="back-link" onClick={onBack}>← Kembali ke halaman utama</button><p className="eyebrow">Dashboard bisnis</p><h1>Selamat datang, {displayName}.</h1><p>Semua kebutuhan tenaga hari ini dalam kendali.</p></div><button className="primary-button" onClick={() => setPublished(true)}><BriefcaseBusiness size={18} /> Buat pekerjaan</button></section>
         {published && <div className="success-banner"><Check /> Draft pekerjaan baru sudah dibuat. Lengkapi detail dan pendanaan sebelum dipublikasikan.<button onClick={() => setPublished(false)} aria-label="Tutup"><X /></button></div>}
         <section className="stats-grid business-stats"><article><div><span className="stat-icon"><BriefcaseBusiness /></span><span>Pekerjaan aktif</span></div><strong>4</strong><small>2 shift dimulai hari ini</small></article><article><div><span className="stat-icon soft"><Users /></span><span>Kandidat baru</span></div><strong>18</strong><small>7 kandidat sangat sesuai</small></article><article><div><span className="stat-icon green"><Banknote /></span><span>Dana pekerjaan</span></div><strong>{money.format(2400000)}</strong><small>Semua pekerjaan terdanai</small></article></section>
         <div className="business-grid">
@@ -273,15 +273,17 @@ function Landing({ onEnter }: { onEnter: (role: Role) => void }) {
         <section className="how-section" id="cara-kerja"><div className="section-heading centered"><div><p className="eyebrow">Cara kerja</p><h2>Tiga langkah menuju peluang baru</h2><p>Tak perlu CV panjang. Ceritakan kemampuanmu, lalu pilih pekerjaan yang paling pas.</p></div></div><div className="steps-grid">{[{icon:<Sparkles/>,n:"01",title:"Lengkapi profil praktis",copy:"Pilih kemampuan, jadwal, dan area kerja yang kamu inginkan."},{icon:<Search/>,n:"02",title:"Temukan pekerjaan",copy:"Lihat bayaran, jadwal, lokasi, dan detail tugas sebelum melamar."},{icon:<Banknote/>,n:"03",title:"Kerjakan & terima bayaran",copy:"Check-in, kirim hasil, lalu pantau payout secara transparan."}].map(item=><article key={item.n}><span className="step-icon">{item.icon}</span><small>{item.n}</small><h3>{item.title}</h3><p>{item.copy}</p></article>)}</div></section>
         <section className="business-cta" id="bisnis"><div><p className="eyebrow light-text">Untuk bisnis lokal</p><h2>Tenaga yang tepat, saat kamu membutuhkannya.</h2><p>Temukan pekerja terverifikasi untuk shift, event, proyek singkat, dan kebutuhan operasional harian.</p><button className="cream-button" onClick={() => onEnter("business")}>Mulai pasang pekerjaan <ArrowRight /></button></div><div className="business-metrics"><article><Users/><strong>18</strong><span>Kandidat baru</span><small>7 sangat sesuai</small></article><article><Clock3/><strong>4,2 jam</strong><span>Rata-rata terisi</span><small>Di Tulungagung</small></article><article><BadgeCheck/><strong>96%</strong><span>Completion rate</span><small>30 hari terakhir</small></article></div></section>
       </main>
-      <footer><Logo /><p>Membuka peluang penghasilan lokal secara aman dan manusiawi.</p><div><button onClick={()=>onEnter("admin")} className="footer-link">Demo admin</button><span>© 2026 PulihkanAku</span></div></footer>
+      <footer><Logo /><p>Membuka peluang penghasilan lokal secara aman dan manusiawi.</p><div><button onClick={()=>onEnter("admin")} className="footer-link">Masuk admin</button><span>© 2026 PulihkanAku</span></div></footer>
     </div>
   );
 }
 
-export function PulihkanAkuApp() {
-  const [role, setRole] = useState<Role | null>(null);
-  if (role === "worker") return <WorkerDashboard onBack={() => setRole(null)} />;
-  if (role === "business") return <BusinessDashboard onBack={() => setRole(null)} />;
+export function PulihkanAkuApp({ initialRole = null, displayName }: { initialRole?: Role | null; displayName?: string }) {
+  const [role, setRole] = useState<Role | null>(initialRole);
+  const goHome = () => window.location.assign("/");
+  const enter = (target: Role) => window.location.assign(`/masuk?role=${target}`);
+  if (role === "worker") return <WorkerDashboard onBack={goHome} displayName={displayName} />;
+  if (role === "business") return <BusinessDashboard onBack={goHome} displayName={displayName} />;
   if (role === "admin") return <AdminDashboard onBack={() => setRole(null)} />;
-  return <Landing onEnter={setRole} />;
+  return <Landing onEnter={enter} />;
 }

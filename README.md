@@ -14,6 +14,8 @@ npm run dev
 
 Buka `http://localhost:3000`. Demo menyediakan tiga surface terintegrasi: landing/worker, business, dan admin.
 
+Klik **Masuk** tidak membuka dashboard secara langsung. Identitas harus terverifikasi, akun harus terdaftar, dan dashboard dipilih berdasarkan role di database.
+
 ## Validasi
 
 ```bash

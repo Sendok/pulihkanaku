@@ -8,6 +8,7 @@ const timestamps = {
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
   email: text("email").notNull(),
+  fullName: text("full_name").notNull().default(""),
   phoneE164: text("phone_e164"),
   role: text("role").notNull(),
   status: text("status").notNull().default("ACTIVE"),
@@ -18,11 +19,34 @@ export const businesses = sqliteTable("businesses", {
   id: text("id").primaryKey(),
   ownerUserId: text("owner_user_id").notNull().references(() => users.id),
   name: text("name").notNull(),
+  category: text("category").notNull().default("Lainnya"),
   city: text("city").notNull(),
   verificationStatus: text("verification_status").notNull().default("DRAFT"),
   trustScore: integer("trust_score").notNull().default(0),
   ...timestamps,
 }, (table) => [index("business_owner_idx").on(table.ownerUserId), index("business_verification_idx").on(table.verificationStatus)]);
+
+export const workerProfiles = sqliteTable("worker_profiles", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  fullName: text("full_name").notNull(),
+  city: text("city").notNull(),
+  district: text("district").notNull(),
+  onboardingStatus: text("onboarding_status").notNull().default("BASIC_COMPLETE"),
+  verificationLevel: text("verification_level").notNull().default("BASIC"),
+  profileCompletion: integer("profile_completion").notNull().default(35),
+  ...timestamps,
+}, (table) => [uniqueIndex("worker_profile_user_idx").on(table.userId), index("worker_profile_city_idx").on(table.city)]);
+
+export const userConsents = sqliteTable("user_consents", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  type: text("type").notNull(),
+  version: text("version").notNull(),
+  granted: integer("granted", { mode: "boolean" }).notNull(),
+  grantedAt: integer("granted_at", { mode: "timestamp_ms" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [uniqueIndex("consent_user_type_version_idx").on(table.userId, table.type, table.version)]);
 
 export const jobs = sqliteTable("jobs", {
   id: text("id").primaryKey(),

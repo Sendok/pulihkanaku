@@ -45,6 +45,12 @@ test("funded job completes worker-to-payout workflow", { timeout: 60_000 }, asyn
   const server = await startServer();
   const business = "business@pulihkanaku.local"; const worker = "worker@pulihkanaku.local";
   try {
+    const authSuffix=String(Date.now()).slice(-8);const newWorker=`auth-${authSuffix}@example.local`;
+    const registered=await api("/api/v1/auth/register",{headers:{"x-demo-email":newWorker},body:{role:"WORKER",fullName:"Rina Puspita",phone:`0812${authSuffix}`,city:"Tulungagung",district:"Kedungwaru",termsAccepted:true,privacyAccepted:true,marketingConsent:false}});
+    assert.deepEqual({role:registered.role,next:registered.next},{role:"WORKER",next:"/app"});
+    const workerPage=await fetch(`${baseUrl}/app`,{headers:{"oai-authenticated-user-email":newWorker},redirect:"manual"});assert.equal(workerPage.status,200);
+    const wrongRole=await fetch(`${baseUrl}/business`,{headers:{"oai-authenticated-user-email":newWorker},redirect:"manual"});assert.equal(wrongRole.status,307);assert.match(wrongRole.headers.get("location")??"",/akses-ditolak/);
+    const unknownAccount=await fetch(`${baseUrl}/app`,{headers:{"oai-authenticated-user-email":`unknown-${authSuffix}@example.local`},redirect:"manual"});assert.equal(unknownAccount.status,307);assert.match(unknownAccount.headers.get("location")??"",/daftar/);
     const created = await api("/api/v1/jobs", { user: business, body: { title: `E2E Packing ${Date.now()}`, payAmount: 160000, category: "Gudang", city: "Tulungagung", district: "Kedungwaru", workerCount: 1, businessId: "business_kirana" } });
     assert.equal(created.status, "DRAFT");
     await api(`/api/v1/jobs/${created.id}/transition`, { user: business, body: { to: "PENDING_VERIFICATION", expectedVersion: 1 } });

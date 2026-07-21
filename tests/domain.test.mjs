@@ -6,6 +6,7 @@ import { calculatePaymentQuote } from "../lib/domain/payment.ts";
 import { can } from "../lib/domain/authorization.ts";
 import { assertApplicationTransition, assertAssignmentTransition } from "../lib/domain/assignment-state-machine.ts";
 import { assertDisputeTransition, assertPayoutTransition } from "../lib/domain/finance-state-machine.ts";
+import { normalizeIndonesianPhone } from "../lib/domain/phone.ts";
 
 test("job state machine accepts the funded publish path", () => {
   assert.doesNotThrow(() => assertJobTransition("PENDING_FUNDING", "PUBLISHED"));
@@ -43,4 +44,11 @@ test("finance workflow enforces payout hold and dispute resolution", () => {
   assert.throws(() => assertPayoutTransition("SCHEDULED", "PAID"), /PAYOUT_INVALID_TRANSITION/);
   assert.doesNotThrow(() => assertDisputeTransition("OPEN", "RESOLVED_WORKER"));
   assert.throws(() => assertDisputeTransition("CLOSED", "UNDER_REVIEW"), /DISPUTE_INVALID_TRANSITION/);
+});
+
+test("Indonesian phone numbers normalize to E.164", () => {
+  assert.equal(normalizeIndonesianPhone("0812-3456-7890"), "+6281234567890");
+  assert.equal(normalizeIndonesianPhone("6281234567890"), "+6281234567890");
+  assert.equal(normalizeIndonesianPhone("+62 812 3456 7890"), "+6281234567890");
+  assert.throws(() => normalizeIndonesianPhone("021555"), /PHONE_INVALID/);
 });
