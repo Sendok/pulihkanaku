@@ -58,6 +58,7 @@ export const jobApplications = sqliteTable("job_applications", {
   jobId: text("job_id").notNull().references(() => jobs.id),
   workerUserId: text("worker_user_id").notNull().references(() => users.id),
   status: text("status").notNull().default("SUBMITTED"),
+  acceptedAt: integer("accepted_at", { mode: "timestamp_ms" }),
   version: integer("version").notNull().default(1),
   ...timestamps,
 }, (table) => [uniqueIndex("application_worker_job_idx").on(table.workerUserId, table.jobId), index("application_job_idx").on(table.jobId)]);
@@ -70,9 +71,47 @@ export const jobAssignments = sqliteTable("job_assignments", {
   status: text("status").notNull().default("CONFIRMED"),
   checkedInAt: integer("checked_in_at", { mode: "timestamp_ms" }),
   checkedOutAt: integer("checked_out_at", { mode: "timestamp_ms" }),
+  evidenceSubmittedAt: integer("evidence_submitted_at", { mode: "timestamp_ms" }),
+  submittedAt: integer("submitted_at", { mode: "timestamp_ms" }),
+  approvedAt: integer("approved_at", { mode: "timestamp_ms" }),
   version: integer("version").notNull().default(1),
   ...timestamps,
-}, (table) => [index("assignment_job_idx").on(table.jobId), index("assignment_status_idx").on(table.status)]);
+}, (table) => [index("assignment_job_idx").on(table.jobId), index("assignment_status_idx").on(table.status), uniqueIndex("assignment_application_idx").on(table.applicationId)]);
+
+export const assignmentAttendance = sqliteTable("assignment_attendance", {
+  id: text("id").primaryKey(),
+  assignmentId: text("assignment_id").notNull().references(() => jobAssignments.id),
+  type: text("type").notNull(),
+  method: text("method").notNull(),
+  latitude: real("latitude"),
+  longitude: real("longitude"),
+  distanceMeters: integer("distance_meters"),
+  deviceMetadata: text("device_metadata"),
+  occurredAt: integer("occurred_at", { mode: "timestamp_ms" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [index("attendance_assignment_idx").on(table.assignmentId, table.occurredAt)]);
+
+export const assignmentEvidence = sqliteTable("assignment_evidence", {
+  id: text("id").primaryKey(),
+  assignmentId: text("assignment_id").notNull().references(() => jobAssignments.id),
+  type: text("type").notNull(),
+  note: text("note"),
+  storageKey: text("storage_key"),
+  mimeType: text("mime_type"),
+  capturedAt: integer("captured_at", { mode: "timestamp_ms" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [index("evidence_assignment_idx").on(table.assignmentId, table.createdAt)]);
+
+export const assignmentReviews = sqliteTable("assignment_reviews", {
+  id: text("id").primaryKey(),
+  assignmentId: text("assignment_id").notNull().references(() => jobAssignments.id),
+  reviewerUserId: text("reviewer_user_id").notNull().references(() => users.id),
+  revieweeType: text("reviewee_type").notNull(),
+  rating: integer("rating").notNull(),
+  tags: text("tags").notNull().default("[]"),
+  comment: text("comment"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [uniqueIndex("review_assignment_reviewer_idx").on(table.assignmentId, table.reviewerUserId)]);
 
 export const paymentTransactions = sqliteTable("payment_transactions", {
   id: text("id").primaryKey(),
@@ -96,6 +135,19 @@ export const payouts = sqliteTable("payouts", {
   version: integer("version").notNull().default(1),
   ...timestamps,
 }, (table) => [index("payout_status_idx").on(table.status), index("payout_worker_idx").on(table.workerUserId)]);
+
+export const ledgerEntries = sqliteTable("ledger_entries", {
+  id: text("id").primaryKey(),
+  jobId: text("job_id").notNull().references(() => jobs.id),
+  assignmentId: text("assignment_id").references(() => jobAssignments.id),
+  transactionId: text("transaction_id").references(() => paymentTransactions.id),
+  type: text("type").notNull(),
+  direction: text("direction").notNull(),
+  amount: integer("amount").notNull(),
+  currency: text("currency").notNull().default("IDR"),
+  reference: text("reference").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [index("ledger_job_idx").on(table.jobId, table.createdAt), uniqueIndex("ledger_reference_idx").on(table.reference)]);
 
 export const auditLogs = sqliteTable("audit_logs", {
   id: text("id").primaryKey(),

@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { jobs, businesses } from "@/db/schema";
 import { fail, ok, requestId } from "@/lib/api-response";
@@ -38,6 +38,8 @@ export async function POST(request: Request) {
   const id = crypto.randomUUID();
   const businessId = typeof body.businessId === "string" ? body.businessId : "business_kirana";
   try {
+    const [ownedBusiness] = await getDb().select({ id: businesses.id }).from(businesses).where(and(eq(businesses.id, businessId), eq(businesses.ownerUserId, identity.id))).limit(1);
+    if (!ownedBusiness) return fail("BUSINESS_NOT_OWNED", "Bisnis tidak ditemukan atau bukan milik akun ini.", reqId, 403);
     await getDb().insert(jobs).values({
       id, businessId, createdByEmail: identity.email, slug: `${String(body.title).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${id.slice(0, 8)}`,
       title: String(body.title).trim(), category: typeof body.category === "string" ? body.category : "Lainnya",

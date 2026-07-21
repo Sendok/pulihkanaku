@@ -18,13 +18,16 @@ Terakhir diperbarui: 21 Juli 2026 (Asia/Jakarta)
 - REST API v1 untuk listing pekerjaan, pembuatan draft, dan transisi pekerjaan ber-audit dengan optimistic locking.
 - Migration dan seed data untuk tiga pekerjaan nyata di Tulungagung.
 - Environment template untuk database, Redis, auth, storage, payment, notification, security, dan observability.
+- Identity-to-role mapping dari database; header role client tidak dipercaya.
+- Vertical slice API: invoice pendanaan, apply, accept, check-in, evidence, submit, approve, scheduled payout, ledger, dan review dua arah.
+- End-to-end API test menjalankan alur business-to-worker-to-payout menggunakan database lokal nyata.
 
 ## Sedang dikerjakan berikutnya
 
 - Migrasi domain core ke monorepo pnpm/Turborepo dan service NestJS.
 - Adapter PostgreSQL, BullMQ, Redis, MinIO, serta Docker Compose.
 - OTP/session, membership-backed role, onboarding, dan verification submission.
-- Endpoint application, assignment, attendance, approval, serta payout untuk melengkapi vertical slice.
+- Check-out, revision request, dispute branch, payout processor, serta reconciliation.
 
 ## Belum selesai
 

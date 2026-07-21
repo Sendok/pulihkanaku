@@ -4,6 +4,7 @@ import { assertJobTransition, availableJobTransitions, InvalidJobTransitionError
 import { calculateMatchingScore } from "../lib/domain/matching.ts";
 import { calculatePaymentQuote } from "../lib/domain/payment.ts";
 import { can } from "../lib/domain/authorization.ts";
+import { assertApplicationTransition, assertAssignmentTransition } from "../lib/domain/assignment-state-machine.ts";
 
 test("job state machine accepts the funded publish path", () => {
   assert.doesNotThrow(() => assertJobTransition("PENDING_FUNDING", "PUBLISHED"));
@@ -27,4 +28,10 @@ test("payment quote preserves worker payable", () => {
 test("RBAC does not grant payout override to business", () => {
   assert.equal(can("BUSINESS_OWNER", "job:create"), true);
   assert.equal(can("BUSINESS_OWNER", "payout:override"), false);
+});
+
+test("application and assignment workflow blocks skipped steps", () => {
+  assert.doesNotThrow(() => assertApplicationTransition("SUBMITTED", "ACCEPTED"));
+  assert.doesNotThrow(() => assertAssignmentTransition("CONFIRMED", "IN_PROGRESS"));
+  assert.throws(() => assertAssignmentTransition("CONFIRMED", "APPROVED"), /ASSIGNMENT_INVALID_TRANSITION/);
 });
