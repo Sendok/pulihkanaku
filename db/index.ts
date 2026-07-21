@@ -12,3 +12,9 @@ export function getDb() {
 
   return drizzle(runtimeEnv.DB, { schema });
 }
+
+export function getD1(): D1Database {
+  const runtimeEnv = env as unknown as { DB?: D1Database };
+  if (!runtimeEnv.DB) throw new Error("Database binding DB tidak tersedia.");
+  return runtimeEnv.DB;
+}

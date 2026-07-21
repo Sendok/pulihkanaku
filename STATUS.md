@@ -13,13 +13,18 @@ Terakhir diperbarui: 21 Juli 2026 (Asia/Jakarta)
 - Surface admin: overview, antrean verifikasi, risiko, dan health status.
 - Metadata SEO, Open Graph, Twitter card, Bahasa Indonesia, dan reduced motion.
 - Build, lint, typecheck, dan smoke test untuk surface saat ini.
+- Domain core teruji: job state machine, deterministic matching, payment quote, dan RBAC.
+- Persistent hosted-preview schema untuk users, businesses, jobs, applications, assignments, payments, payouts, dan audit logs.
+- REST API v1 untuk listing pekerjaan, pembuatan draft, dan transisi pekerjaan ber-audit dengan optimistic locking.
+- Migration dan seed data untuk tiga pekerjaan nyata di Tulungagung.
+- Environment template untuk database, Redis, auth, storage, payment, notification, security, dan observability.
 
 ## Sedang dikerjakan berikutnya
 
-- Migrasi ke monorepo pnpm/Turborepo sesuai target final.
-- NestJS REST API, PostgreSQL schema/migration/seed, BullMQ, Redis, dan MinIO.
-- OTP/session/RBAC dan resource-level authorization.
-- Vertical slice transaksional yang memakai database bersama.
+- Migrasi domain core ke monorepo pnpm/Turborepo dan service NestJS.
+- Adapter PostgreSQL, BullMQ, Redis, MinIO, serta Docker Compose.
+- OTP/session, membership-backed role, onboarding, dan verification submission.
+- Endpoint application, assignment, attendance, approval, serta payout untuk melengkapi vertical slice.
 
 ## Belum selesai
 
