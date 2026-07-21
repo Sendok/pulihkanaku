@@ -16,6 +16,8 @@ Buka `http://localhost:3000`. Demo menyediakan tiga surface terintegrasi: landin
 
 Klik **Masuk** tidak membuka dashboard secara langsung. Identitas harus terverifikasi, akun harus terdaftar, dan dashboard dipilih berdasarkan role di database.
 
+Setelah registrasi, worker dan pemilik bisnis dapat melengkapi onboarding dan mengajukan verifikasi. Dokumen disimpan pada object storage privat; hanya pemilik dan petugas verifikasi yang dapat membukanya. Worker harus lolos verifikasi identitas sebelum melamar, sedangkan bisnis harus berstatus terverifikasi sebelum membuat pekerjaan.
+
 ## Validasi
 
 ```bash
@@ -36,4 +38,4 @@ npm run build
 
 API hosted-preview memakai persistent D1 dan domain rules yang sama dengan target service. Autentikasi OTP dan adapter PostgreSQL/NestJS termasuk milestone berikutnya; D1 bukan target penyimpanan finansial production.
 
-Dokumentasi pekerjaan dan keputusan ada di [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md), [STATUS.md](./STATUS.md), dan folder [docs](./docs).
+Dokumentasi pekerjaan dan keputusan ada di [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md), [STATUS.md](./STATUS.md), [alur autentikasi](./docs/authentication.md), dan [onboarding/verifikasi](./docs/onboarding-verification.md).

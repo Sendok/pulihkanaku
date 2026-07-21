@@ -13,6 +13,8 @@ export async function POST(request: Request, context: Context) {
   try { assertAuthorized(identity.role, "job:apply"); } catch { return fail("FORBIDDEN", "Akun ini tidak dapat melamar pekerjaan.", reqId, 403); }
   const { id: jobId } = await context.params;
   const d1 = getD1();
+  const profile = await d1.prepare("SELECT verification_level FROM worker_profiles WHERE user_id=? LIMIT 1").bind(identity.id).first<{verification_level:string}>();
+  if (!profile || !["IDENTITY_VERIFIED","BANK_VERIFIED","SKILL_VERIFIED","TRUSTED_WORKER"].includes(profile.verification_level)) return fail("WORKER_VERIFICATION_REQUIRED", "Verifikasi identitas diperlukan sebelum melamar pekerjaan.", reqId, 403);
   const job = await d1.prepare("SELECT id, status, funding_status FROM jobs WHERE id = ? LIMIT 1").bind(jobId).first<{ id: string; status: string; funding_status: string }>();
   if (!job) return fail("JOB_NOT_FOUND", "Pekerjaan tidak ditemukan.", reqId, 404);
   if (job.status !== "PUBLISHED" || job.funding_status !== "FUNDED") return fail("JOB_NOT_AVAILABLE", "Pekerjaan ini belum tersedia untuk dilamar.", reqId, 409);

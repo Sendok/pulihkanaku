@@ -18,3 +18,9 @@ export function getD1(): D1Database {
   if (!runtimeEnv.DB) throw new Error("Database binding DB tidak tersedia.");
   return runtimeEnv.DB;
 }
+
+export function getUploads(): R2Bucket {
+  const runtimeEnv = env as unknown as { UPLOADS?: R2Bucket };
+  if (!runtimeEnv.UPLOADS) throw new Error("Object storage binding UPLOADS tidak tersedia.");
+  return runtimeEnv.UPLOADS;
+}

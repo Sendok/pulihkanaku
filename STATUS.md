@@ -1,6 +1,6 @@
 # Status
 
-Terakhir diperbarui: 21 Juli 2026 (Asia/Jakarta)
+Terakhir diperbarui: 22 Juli 2026 (Asia/Jakarta)
 
 ## Selesai
 
@@ -23,12 +23,13 @@ Terakhir diperbarui: 21 Juli 2026 (Asia/Jakarta)
 - End-to-end API test menjalankan alur business-to-worker-to-payout menggunakan database lokal nyata.
 - Check-out wajib sebelum submit, request revision, dispute messaging/resolution, payout hold, processing, completion, dan reconciliation.
 - Authentication gate resmi, registrasi worker/business, database-backed role redirect, protected dashboard routes, versioned consent, dan E.164 phone normalization.
+- Onboarding worker dan business yang persisten, upload dokumen privat ke R2, validasi signature/ukuran, verification submission, admin review, expiry, audit trail, serta penguncian apply/create-job sampai role terkait terverifikasi.
 
 ## Sedang dikerjakan berikutnya
 
 - Migrasi domain core ke monorepo pnpm/Turborepo dan service NestJS.
 - Adapter PostgreSQL, BullMQ, Redis, MinIO, serta Docker Compose.
-- OTP/session, membership-backed role, onboarding, dan verification submission.
+- OTP/session, membership-backed role, payout account onboarding, malware scanner asynchronous, dan verification reminder/expiry job.
 - Payout provider berizin, webhook production, retry queue, failure handling, dan manual reconciliation UI.
 
 ## Belum selesai

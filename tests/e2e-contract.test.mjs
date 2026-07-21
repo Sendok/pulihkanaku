@@ -19,9 +19,9 @@ function startServer() {
   });
 }
 
-async function api(path, { user, body, headers = {} } = {}) {
+async function api(path, { user, body, headers = {}, method = "POST" } = {}) {
   const response = await fetch(`${baseUrl}${path}`, {
-    method: body === undefined ? "POST" : "POST",
+    method,
     headers: { ...(body === undefined ? {} : { "content-type": "application/json" }), ...(user ? { "x-demo-user": user } : {}), ...headers },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -36,9 +36,9 @@ test("vertical slice contracts exist and remain audited", async () => {
     readFile(new URL("../app/api/v1/jobs/[id]/transition/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../lib/domain/job-state-machine.ts", import.meta.url), "utf8"),
   ]);
-  for (const entity of ["jobs", "job_applications", "job_assignments", "assignment_attendance", "assignment_evidence", "assignment_reviews", "payment_transactions", "ledger_entries", "payouts", "disputes", "dispute_messages", "reconciliation_records", "audit_logs"]) assert.match(schema, new RegExp(entity));
+  for (const entity of ["jobs", "job_applications", "job_assignments", "assignment_attendance", "assignment_evidence", "assignment_reviews", "payment_transactions", "ledger_entries", "payouts", "disputes", "dispute_messages", "reconciliation_records", "verification_submissions", "verification_documents", "audit_logs"]) assert.match(schema, new RegExp(entity));
   assert.match(transition, /expectedVersion/); assert.match(transition, /audit_logs/); assert.match(stateMachine, /PENDING_FUNDING/); assert.match(stateMachine, /COMPLETED/);
-  for (const route of ["jobs/[id]/applications", "applications/[id]/accept", "assignments/[id]/check-in", "assignments/[id]/check-out", "assignments/[id]/evidence", "assignments/[id]/submit", "assignments/[id]/request-revision", "assignments/[id]/approve", "assignments/[id]/disputes", "assignments/[id]/reviews", "disputes/[id]/messages", "disputes/[id]/resolve", "payouts/[id]/mock-process", "payouts/[id]/mock-complete"]) await access(new URL(`../app/api/v1/${route}/route.ts`, import.meta.url));
+  for (const route of ["onboarding", "verifications", "verifications/[id]", "verifications/[id]/review", "documents/[id]", "jobs/[id]/applications", "applications/[id]/accept", "assignments/[id]/check-in", "assignments/[id]/check-out", "assignments/[id]/evidence", "assignments/[id]/submit", "assignments/[id]/request-revision", "assignments/[id]/approve", "assignments/[id]/disputes", "assignments/[id]/reviews", "disputes/[id]/messages", "disputes/[id]/resolve", "payouts/[id]/mock-process", "payouts/[id]/mock-complete"]) await access(new URL(`../app/api/v1/${route}/route.ts`, import.meta.url));
 });
 
 test("funded job completes worker-to-payout workflow", { timeout: 60_000 }, async () => {
@@ -51,6 +51,13 @@ test("funded job completes worker-to-payout workflow", { timeout: 60_000 }, asyn
     const workerPage=await fetch(`${baseUrl}/app`,{headers:{"oai-authenticated-user-email":newWorker},redirect:"manual"});assert.equal(workerPage.status,200);
     const wrongRole=await fetch(`${baseUrl}/business`,{headers:{"oai-authenticated-user-email":newWorker},redirect:"manual"});assert.equal(wrongRole.status,307);assert.match(wrongRole.headers.get("location")??"",/akses-ditolak/);
     const unknownAccount=await fetch(`${baseUrl}/app`,{headers:{"oai-authenticated-user-email":`unknown-${authSuffix}@example.local`},redirect:"manual"});assert.equal(unknownAccount.status,307);assert.match(unknownAccount.headers.get("location")??"",/daftar/);
+    await api("/api/v1/onboarding",{method:"PUT",user:newWorker,body:{birthYear:1995,bio:"Berpengalaman membantu operasional toko lokal.",skills:["Packing","Kasir"],availability:["Pagi"],preferredJobTypes:["Shift harian"],vehicles:["Motor"],maxDistanceKm:20}});
+    const verificationForm=new FormData();verificationForm.set("identityDocument",new File([new Uint8Array([0xff,0xd8,0xff,0xe0,0,0,0,0])],"identitas.jpg",{type:"image/jpeg"}));
+    const verificationResponse=await fetch(`${baseUrl}/api/v1/verifications`,{method:"POST",headers:{"x-demo-user":newWorker},body:verificationForm});const verificationPayload=await verificationResponse.json();assert.equal(verificationPayload.success,true,JSON.stringify(verificationPayload));
+    const verificationDetailResponse=await fetch(`${baseUrl}/api/v1/verifications/${verificationPayload.data.id}`,{headers:{"x-demo-user":newWorker}});const verificationDetail=await verificationDetailResponse.json();assert.equal(verificationDetail.success,true);const documentId=verificationDetail.data.documents[0].id;
+    const forbiddenDocument=await fetch(`${baseUrl}/api/v1/documents/${documentId}`,{headers:{"x-demo-user":business}});assert.equal(forbiddenDocument.status,403);
+    const ownedDocument=await fetch(`${baseUrl}/api/v1/documents/${documentId}`,{headers:{"x-demo-user":newWorker}});assert.equal(ownedDocument.status,200);assert.equal(ownedDocument.headers.get("cache-control"),"private, no-store");
+    const reviewed=await api(`/api/v1/verifications/${verificationPayload.data.id}/review`,{user:"admin@pulihkanaku.local",body:{decision:"APPROVE",expectedVersion:1,expiryDays:365}});assert.equal(reviewed.status,"APPROVED");
     const created = await api("/api/v1/jobs", { user: business, body: { title: `E2E Packing ${Date.now()}`, payAmount: 160000, category: "Gudang", city: "Tulungagung", district: "Kedungwaru", workerCount: 1, businessId: "business_kirana" } });
     assert.equal(created.status, "DRAFT");
     await api(`/api/v1/jobs/${created.id}/transition`, { user: business, body: { to: "PENDING_VERIFICATION", expectedVersion: 1 } });

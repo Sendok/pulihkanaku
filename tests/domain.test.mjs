@@ -7,6 +7,7 @@ import { can } from "../lib/domain/authorization.ts";
 import { assertApplicationTransition, assertAssignmentTransition } from "../lib/domain/assignment-state-machine.ts";
 import { assertDisputeTransition, assertPayoutTransition } from "../lib/domain/finance-state-machine.ts";
 import { normalizeIndonesianPhone } from "../lib/domain/phone.ts";
+import { safeDocumentName, validateVerificationFile } from "../lib/domain/verification-document.ts";
 
 test("job state machine accepts the funded publish path", () => {
   assert.doesNotThrow(() => assertJobTransition("PENDING_FUNDING", "PUBLISHED"));
@@ -51,4 +52,11 @@ test("Indonesian phone numbers normalize to E.164", () => {
   assert.equal(normalizeIndonesianPhone("6281234567890"), "+6281234567890");
   assert.equal(normalizeIndonesianPhone("+62 812 3456 7890"), "+6281234567890");
   assert.throws(() => normalizeIndonesianPhone("021555"), /PHONE_INVALID/);
+});
+
+test("verification documents require an allowed MIME type and matching signature", async () => {
+  await assert.doesNotReject(() => validateVerificationFile(new File([new Uint8Array([0xff, 0xd8, 0xff, 0xe0])], "ktp.jpg", { type: "image/jpeg" })));
+  await assert.rejects(() => validateVerificationFile(new File(["<script>alert(1)</script>"], "ktp.jpg", { type: "image/jpeg" })), /INVALID_FILE_SIGNATURE/);
+  await assert.rejects(() => validateVerificationFile(new File(["hello"], "ktp.svg", { type: "image/svg+xml" })), /UNSUPPORTED_FILE_TYPE/);
+  assert.equal(safeDocumentName('../../KTP "Rina".pdf'), "KTP Rina.pdf");
 });

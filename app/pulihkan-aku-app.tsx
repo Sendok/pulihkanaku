@@ -191,7 +191,7 @@ function JobDetail({ job, applied, onClose, onApply }: { job: Job; applied: bool
   );
 }
 
-function WorkerDashboard({ onBack, displayName = "Pengguna" }: { onBack: () => void; displayName?: string }) {
+function WorkerDashboard({ onBack, displayName = "Pengguna", profileCompletion = 35, verificationStatus = "BASIC" }: { onBack: () => void; displayName?: string; profileCompletion?: number; verificationStatus?: string }) {
   const [selected, setSelected] = useState<Job | null>(null);
   const [saved, setSaved] = useState<string[]>([]);
   const [applied, setApplied] = useState<string[]>([]);
@@ -206,7 +206,7 @@ function WorkerDashboard({ onBack, displayName = "Pengguna" }: { onBack: () => v
       <main className="dashboard-main">
         <section className="welcome-row">
           <div><button className="back-link" onClick={onBack}>← Kembali ke halaman utama</button><p className="eyebrow">Ruang pekerja</p><h1>Selamat datang, {displayName}.</h1><p>Mari cari peluang yang paling sesuai hari ini.</p></div>
-          <div className="profile-progress"><div className="progress-ring">80<span>%</span></div><div><strong>Profilmu hampir lengkap</strong><span>Tambahkan rekening payout</span></div><ArrowRight /></div>
+          <a className="profile-progress" href="/app/onboarding"><div className="progress-ring">{profileCompletion}<span>%</span></div><div><strong>{verificationStatus==="IDENTITY_VERIFIED"?"Identitas terverifikasi":"Lengkapi profil dan verifikasi"}</strong><span>{verificationStatus==="IDENTITY_VERIFIED"?"Profilmu siap digunakan":"Buka akses fitur pekerjaan sensitif"}</span></div><ArrowRight /></a>
         </section>
         <section className="stats-grid">
           <article className="income-stat"><div><span className="stat-icon"><WalletCards /></span><span>Pendapatan bulan ini</span></div><strong>{money.format(975000)}</strong><small><TrendingUp size={14} /> Naik Rp325.000 dari Juni</small></article>
@@ -229,13 +229,14 @@ function WorkerDashboard({ onBack, displayName = "Pengguna" }: { onBack: () => v
   );
 }
 
-function BusinessDashboard({ onBack, displayName = "Bisnis Anda" }: { onBack: () => void; displayName?: string }) {
+function BusinessDashboard({ onBack, displayName = "Bisnis Anda", verificationStatus = "DRAFT" }: { onBack: () => void; displayName?: string; verificationStatus?: string }) {
   const [published, setPublished] = useState(false);
   return (
     <div className="product-shell business-shell">
       <header className="product-header"><Logo /><div className="header-actions"><button className="icon-button" aria-label="Notifikasi"><Bell size={20} /></button><button className="profile-chip" onClick={() => window.location.assign("/signout-with-chatgpt?return_to=/")}><span>{displayName.slice(0,2).toUpperCase()}</span><span><small>Akun bisnis</small>{displayName}</span><ChevronDown size={16} /></button></div></header>
       <main className="dashboard-main">
         <section className="welcome-row"><div><button className="back-link" onClick={onBack}>← Kembali ke halaman utama</button><p className="eyebrow">Dashboard bisnis</p><h1>Selamat datang, {displayName}.</h1><p>Semua kebutuhan tenaga hari ini dalam kendali.</p></div><button className="primary-button" onClick={() => setPublished(true)}><BriefcaseBusiness size={18} /> Buat pekerjaan</button></section>
+        {verificationStatus!=="VERIFIED"&&<a className="verification-banner" href="/business/onboarding"><ShieldCheck/><span><strong>Verifikasi bisnis diperlukan</strong>Lengkapi data agar pekerjaan dapat ditinjau dan dipublikasikan.</span><ArrowRight/></a>}
         {published && <div className="success-banner"><Check /> Draft pekerjaan baru sudah dibuat. Lengkapi detail dan pendanaan sebelum dipublikasikan.<button onClick={() => setPublished(false)} aria-label="Tutup"><X /></button></div>}
         <section className="stats-grid business-stats"><article><div><span className="stat-icon"><BriefcaseBusiness /></span><span>Pekerjaan aktif</span></div><strong>4</strong><small>2 shift dimulai hari ini</small></article><article><div><span className="stat-icon soft"><Users /></span><span>Kandidat baru</span></div><strong>18</strong><small>7 kandidat sangat sesuai</small></article><article><div><span className="stat-icon green"><Banknote /></span><span>Dana pekerjaan</span></div><strong>{money.format(2400000)}</strong><small>Semua pekerjaan terdanai</small></article></section>
         <div className="business-grid">
@@ -251,7 +252,7 @@ function BusinessDashboard({ onBack, displayName = "Bisnis Anda" }: { onBack: ()
 }
 
 function AdminDashboard({ onBack }: { onBack: () => void }) {
-  return <div className="admin-shell"><aside className="admin-sidebar"><Logo /><nav><a className="active"><LayoutDashboard />Overview</a><a><Users />Workers</a><a><Building2 />Businesses</a><a><BriefcaseBusiness />Jobs</a><a><ShieldCheck />Verifications <span>12</span></a><a><WalletCards />Payments</a><a><MessageCircle />Disputes <span>3</span></a></nav><button className="back-link light" onClick={onBack}>← Halaman utama</button></aside><main className="admin-main"><header><div><p className="eyebrow">Operations center</p><h1>Ringkasan platform</h1></div><div className="header-actions"><button className="icon-button"><Bell /></button><span className="admin-avatar">SA</span></div></header><section className="admin-stats"><article><span>Worker aktif</span><strong>1.248</strong><small>+8,2% bulan ini</small></article><article><span>Bisnis terverifikasi</span><strong>186</strong><small>12 menunggu review</small></article><article><span>GMV bulan ini</span><strong>Rp184,6 jt</strong><small>+12,4% bulan ini</small></article><article><span>Sengketa terbuka</span><strong>3</strong><small>Semua dalam SLA</small></article></section><section className="admin-content"><div className="panel"><div className="section-title"><div><p className="eyebrow">Perlu perhatian</p><h2>Antrean verifikasi bisnis</h2></div><button className="outline-button small">Lihat semua</button></div><div className="admin-table"><div className="table-head"><span>Bisnis</span><span>Kota</span><span>Diajukan</span><span>Risiko</span><span /></div>{[["Sumber Rejeki Mart","Kediri","2 jam lalu","Rendah"],["CV Berkah Logistik","Blitar","4 jam lalu","Sedang"],["Kopi Lereng Wilis","Tulungagung","Kemarin","Rendah"]].map(row => <div className="table-row" key={row[0]}>{row.map((cell,index)=><span key={cell} className={index===3 ? `risk ${cell === "Sedang" ? "medium" : "low"}` : ""}>{cell}</span>)}<button className="text-button">Tinjau <ArrowRight /></button></div>)}</div></div><aside className="panel"><p className="eyebrow">Kesehatan sistem</p><h2>Semua layanan normal</h2><div className="health-list">{["API","Database","Queue & Redis","Object storage","Payment webhook"].map(x=><span key={x}><i />{x}<small>Normal</small></span>)}</div></aside></section></main></div>;
+  return <div className="admin-shell"><aside className="admin-sidebar"><Logo /><nav><a className="active"><LayoutDashboard />Overview</a><a><Users />Workers</a><a><Building2 />Businesses</a><a><BriefcaseBusiness />Jobs</a><a href="/admin/verifications"><ShieldCheck />Verifications</a><a><WalletCards />Payments</a><a><MessageCircle />Disputes <span>3</span></a></nav><button className="back-link light" onClick={onBack}>← Halaman utama</button></aside><main className="admin-main"><header><div><p className="eyebrow">Operations center</p><h1>Ringkasan platform</h1></div><div className="header-actions"><button className="icon-button"><Bell /></button><span className="admin-avatar">SA</span></div></header><section className="admin-stats"><article><span>Worker aktif</span><strong>1.248</strong><small>+8,2% bulan ini</small></article><article><span>Bisnis terverifikasi</span><strong>186</strong><small>12 menunggu review</small></article><article><span>GMV bulan ini</span><strong>Rp184,6 jt</strong><small>+12,4% bulan ini</small></article><article><span>Sengketa terbuka</span><strong>3</strong><small>Semua dalam SLA</small></article></section><section className="admin-content"><div className="panel"><div className="section-title"><div><p className="eyebrow">Perlu perhatian</p><h2>Antrean verifikasi bisnis</h2></div><a className="outline-button small" href="/admin/verifications">Lihat semua</a></div><div className="admin-table"><div className="table-head"><span>Bisnis</span><span>Kota</span><span>Diajukan</span><span>Risiko</span><span /></div>{[["Sumber Rejeki Mart","Kediri","2 jam lalu","Rendah"],["CV Berkah Logistik","Blitar","4 jam lalu","Sedang"],["Kopi Lereng Wilis","Tulungagung","Kemarin","Rendah"]].map(row => <div className="table-row" key={row[0]}>{row.map((cell,index)=><span key={cell} className={index===3 ? `risk ${cell === "Sedang" ? "medium" : "low"}` : ""}>{cell}</span>)}<a className="text-button" href="/admin/verifications">Tinjau <ArrowRight /></a></div>)}</div></div><aside className="panel"><p className="eyebrow">Kesehatan sistem</p><h2>Semua layanan normal</h2><div className="health-list">{["API","Database","Queue & Redis","Object storage","Payment webhook"].map(x=><span key={x}><i />{x}<small>Normal</small></span>)}</div></aside></section></main></div>;
 }
 
 function Landing({ onEnter }: { onEnter: (role: Role) => void }) {
@@ -278,12 +279,12 @@ function Landing({ onEnter }: { onEnter: (role: Role) => void }) {
   );
 }
 
-export function PulihkanAkuApp({ initialRole = null, displayName }: { initialRole?: Role | null; displayName?: string }) {
+export function PulihkanAkuApp({ initialRole = null, displayName, profileCompletion, verificationStatus }: { initialRole?: Role | null; displayName?: string; profileCompletion?: number; verificationStatus?: string }) {
   const [role, setRole] = useState<Role | null>(initialRole);
   const goHome = () => window.location.assign("/");
   const enter = (target: Role) => window.location.assign(`/masuk?role=${target}`);
-  if (role === "worker") return <WorkerDashboard onBack={goHome} displayName={displayName} />;
-  if (role === "business") return <BusinessDashboard onBack={goHome} displayName={displayName} />;
+  if (role === "worker") return <WorkerDashboard onBack={goHome} displayName={displayName} profileCompletion={profileCompletion} verificationStatus={verificationStatus} />;
+  if (role === "business") return <BusinessDashboard onBack={goHome} displayName={displayName} verificationStatus={verificationStatus} />;
   if (role === "admin") return <AdminDashboard onBack={() => setRole(null)} />;
   return <Landing onEnter={enter} />;
 }

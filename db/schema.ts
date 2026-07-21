@@ -21,6 +21,11 @@ export const businesses = sqliteTable("businesses", {
   name: text("name").notNull(),
   category: text("category").notNull().default("Lainnya"),
   city: text("city").notNull(),
+  district: text("district").notNull().default(""),
+  address: text("address").notNull().default(""),
+  representativeName: text("representative_name").notNull().default(""),
+  nib: text("nib"),
+  onboardingStatus: text("onboarding_status").notNull().default("BASIC_COMPLETE"),
   verificationStatus: text("verification_status").notNull().default("DRAFT"),
   trustScore: integer("trust_score").notNull().default(0),
   ...timestamps,
@@ -32,6 +37,16 @@ export const workerProfiles = sqliteTable("worker_profiles", {
   fullName: text("full_name").notNull(),
   city: text("city").notNull(),
   district: text("district").notNull(),
+  birthYear: integer("birth_year"),
+  bio: text("bio").notNull().default(""),
+  skills: text("skills").notNull().default("[]"),
+  availability: text("availability").notNull().default("[]"),
+  preferredJobTypes: text("preferred_job_types").notNull().default("[]"),
+  vehicles: text("vehicles").notNull().default("[]"),
+  maxDistanceKm: integer("max_distance_km").notNull().default(10),
+  emergencyContactName: text("emergency_contact_name"),
+  emergencyContactPhone: text("emergency_contact_phone"),
+  payoutStatus: text("payout_status").notNull().default("MISSING"),
   onboardingStatus: text("onboarding_status").notNull().default("BASIC_COMPLETE"),
   verificationLevel: text("verification_level").notNull().default("BASIC"),
   profileCompletion: integer("profile_completion").notNull().default(35),
@@ -47,6 +62,33 @@ export const userConsents = sqliteTable("user_consents", {
   grantedAt: integer("granted_at", { mode: "timestamp_ms" }).notNull(),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 }, (table) => [uniqueIndex("consent_user_type_version_idx").on(table.userId, table.type, table.version)]);
+
+export const verificationSubmissions = sqliteTable("verification_submissions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  subjectType: text("subject_type").notNull(),
+  businessId: text("business_id").references(() => businesses.id),
+  status: text("status").notNull().default("SUBMITTED"),
+  submittedAt: integer("submitted_at", { mode: "timestamp_ms" }).notNull(),
+  reviewedAt: integer("reviewed_at", { mode: "timestamp_ms" }),
+  reviewedByUserId: text("reviewed_by_user_id").references(() => users.id),
+  reviewReason: text("review_reason"),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }),
+  version: integer("version").notNull().default(1),
+  ...timestamps,
+}, (table) => [index("verification_status_idx").on(table.status, table.submittedAt), index("verification_user_idx").on(table.userId, table.submittedAt)]);
+
+export const verificationDocuments = sqliteTable("verification_documents", {
+  id: text("id").primaryKey(),
+  submissionId: text("submission_id").notNull().references(() => verificationSubmissions.id),
+  userId: text("user_id").notNull().references(() => users.id),
+  type: text("type").notNull(),
+  objectKey: text("object_key").notNull(),
+  fileName: text("file_name").notNull(),
+  mimeType: text("mime_type").notNull(),
+  sizeBytes: integer("size_bytes").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [uniqueIndex("verification_document_object_idx").on(table.objectKey), index("verification_document_submission_idx").on(table.submissionId)]);
 
 export const jobs = sqliteTable("jobs", {
   id: text("id").primaryKey(),

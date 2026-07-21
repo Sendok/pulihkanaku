@@ -14,6 +14,7 @@ const permissions = {
   "dispute:resolve": ["SUPPORT_AGENT", "OPERATIONS_ADMIN", "SUPER_ADMIN"],
   "payout:process": ["FINANCE_ADMIN", "SUPER_ADMIN"],
   "verification:review": ["VERIFICATION_AGENT", "OPERATIONS_ADMIN", "SUPER_ADMIN"],
+  "verification:submit": ["WORKER", "BUSINESS_OWNER"],
   "payout:override": ["FINANCE_ADMIN", "SUPER_ADMIN"],
 } as const satisfies Record<string, readonly Role[]>;
 

@@ -29,6 +29,13 @@
       "when": 1784665263217,
       "tag": "0003_cheerful_sunfire",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1784666095261,
+      "tag": "0004_secret_salo",
+      "breakpoints": true
     }
   ]
 }
