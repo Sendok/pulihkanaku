@@ -1,0 +1,9 @@
+"use client";
+import{Laptop,LogOut,ShieldCheck,Smartphone}from"lucide-react";import{useEffect,useState}from"react";import{LogoutButton}from"./logout-button";
+type Session={id:string;device_name:string;created_at:number;last_seen_at:number;expires_at:number};
+export function SessionManager({currentSessionId}:{currentSessionId:string}){
+  const[items,setItems]=useState<Session[]>([]);const[loading,setLoading]=useState(true);
+  useEffect(()=>{fetch("/api/v1/auth/sessions").then(response=>response.json()).then(result=>{const payload=result as{success:boolean;data?:{items:Session[]}};if(payload.success&&payload.data)setItems(payload.data.items)}).finally(()=>setLoading(false))},[]);
+  async function logoutAll(){if(!window.confirm("Keluar dari semua perangkat?"))return;await fetch("/api/v1/auth/sessions",{method:"DELETE"});window.location.assign("/masuk")}
+  return <div className="session-manager"><div className="security-callout"><ShieldCheck/><span><strong>Sesi dilindungi cookie HTTP-only.</strong>Kata sandi dan token sesi tidak pernah disimpan di browser JavaScript.</span></div><div className="session-heading"><div><h2>Perangkat aktif</h2><p>Keluar dari semua perangkat bila ada aktivitas yang tidak kamu kenali.</p></div><button className="outline-button danger-button" onClick={logoutAll}><LogOut/>Keluar semua</button></div>{loading?<p className="queue-empty">Memuat perangkat…</p>:<div className="session-list">{items.map(item=><article key={item.id}>{/Android|iOS/i.test(item.device_name)?<Smartphone/>:<Laptop/>}<span><strong>{item.device_name}{item.id===currentSessionId?" · perangkat ini":""}</strong><small>Aktif {new Date(item.last_seen_at).toLocaleString("id-ID")} · berakhir {new Date(item.expires_at).toLocaleDateString("id-ID")}</small></span></article>)}</div>}<LogoutButton className="primary-button full auth-submit">Keluar dari perangkat ini</LogoutButton></div>
+}

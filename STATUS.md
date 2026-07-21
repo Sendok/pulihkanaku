@@ -24,12 +24,15 @@ Terakhir diperbarui: 22 Juli 2026 (Asia/Jakarta)
 - Check-out wajib sebelum submit, request revision, dispute messaging/resolution, payout hold, processing, completion, dan reconciliation.
 - Authentication gate resmi, registrasi worker/business, database-backed role redirect, protected dashboard routes, versioned consent, dan E.164 phone normalization.
 - Onboarding worker dan business yang persisten, upload dokumen privat ke R2, validasi signature/ukuran, verification submission, admin review, expiry, audit trail, serta penguncian apply/create-job sampai role terkait terverifikasi.
+- Login/register PulihkanAku tanpa GPT, PBKDF2 password hashing, opaque server session, secure cookie, rate limit, temporary account lock, device session list, single/all-device logout, dan audit login.
+- Membership-backed business role, payout account onboarding terenkripsi, serta maintenance endpoint untuk reminder dan expiry verifikasi.
+- Fondasi pnpm/Turborepo, bootstrap NestJS API, BullMQ worker, PostgreSQL/Drizzle adapter, shared environment validation, Docker Compose PostgreSQL/Redis/MinIO, dan container API/worker.
 
 ## Sedang dikerjakan berikutnya
 
-- Migrasi domain core ke monorepo pnpm/Turborepo dan service NestJS.
-- Adapter PostgreSQL, BullMQ, Redis, MinIO, serta Docker Compose.
-- OTP/session, membership-backed role, payout account onboarding, malware scanner asynchronous, dan verification reminder/expiry job.
+- Migrasi module domain dan schema lengkap dari D1 preview ke service NestJS/PostgreSQL hingga contract parity.
+- Integrasi queue BullMQ, Redis rate limiting/cache, dan MinIO document adapter ke workflow nyata.
+- OTP untuk verifikasi kontak/pemulihan akun dan malware scanner asynchronous.
 - Payout provider berizin, webhook production, retry queue, failure handling, dan manual reconciliation UI.
 
 ## Belum selesai
@@ -39,4 +42,4 @@ Terakhir diperbarui: 22 Juli 2026 (Asia/Jakarta)
 - E2E Playwright, integration/security tests, Docker production, CI, backup/restore.
 - Halaman publik dinamis, CMS, PWA offline, subscription, dan rencana penghasilan.
 
-Tidak ada fitur backend yang diklaim selesai pada milestone experience ini.
+Hosted preview memiliki backend D1/R2 yang berfungsi. Service PostgreSQL/NestJS mandiri masih dalam migrasi bertahap dan belum diklaim production-complete.

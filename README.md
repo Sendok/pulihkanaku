@@ -14,7 +14,7 @@ npm run dev
 
 Buka `http://localhost:3000`. Demo menyediakan tiga surface terintegrasi: landing/worker, business, dan admin.
 
-Klik **Masuk** tidak membuka dashboard secara langsung. Identitas harus terverifikasi, akun harus terdaftar, dan dashboard dipilih berdasarkan role di database.
+Klik **Masuk** membuka form PulihkanAku untuk email/nomor telepon dan kata sandi. Session disimpan server-side dan dashboard dipilih berdasarkan role serta membership di database—tanpa login GPT.
 
 Setelah registrasi, worker dan pemilik bisnis dapat melengkapi onboarding dan mengajukan verifikasi. Dokumen disimpan pada object storage privat; hanya pemilik dan petugas verifikasi yang dapat membukanya. Worker harus lolos verifikasi identitas sebelum melamar, sedangkan bisnis harus berstatus terverifikasi sebelum membuat pekerjaan.
 
@@ -29,13 +29,6 @@ npm run test:e2e
 npm run build
 ```
 
-## Akun demo
+API hosted-preview memakai persistent D1 dan domain rules yang sama dengan target service. Akun baru dibuat melalui halaman registrasi. Adapter PostgreSQL/NestJS tetap menjadi target service mandiri; D1 bukan target penyimpanan finansial production.
 
-- Worker: `worker@pulihkanaku.local`
-- Business: `business@pulihkanaku.local`
-- Support: `support@pulihkanaku.local`
-- Admin: `admin@pulihkanaku.local`
-
-API hosted-preview memakai persistent D1 dan domain rules yang sama dengan target service. Autentikasi OTP dan adapter PostgreSQL/NestJS termasuk milestone berikutnya; D1 bukan target penyimpanan finansial production.
-
-Dokumentasi pekerjaan dan keputusan ada di [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md), [STATUS.md](./STATUS.md), [alur autentikasi](./docs/authentication.md), dan [onboarding/verifikasi](./docs/onboarding-verification.md).
+Dokumentasi pekerjaan dan keputusan ada di [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md), [STATUS.md](./STATUS.md), [alur autentikasi](./docs/authentication.md), [onboarding/verifikasi](./docs/onboarding-verification.md), dan [fondasi service produksi](./docs/service-foundation.md).

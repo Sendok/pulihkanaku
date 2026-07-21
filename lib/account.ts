@@ -1,14 +1,14 @@
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { requireChatGPTUser } from "@/app/chatgpt-auth";
 import { getDb } from "@/db";
-import { businesses, users, workerProfiles } from "@/db/schema";
+import { businessMembers, businesses, users, workerProfiles } from "@/db/schema";
 import { isRole, type Role } from "./domain/authorization";
+import { safeReturnPath, sessionUserFromCookies } from "./security/auth";
 
 export type Account = { id:string;email:string;fullName:string;role:Role;businessName:string|null;profileCompletion:number;verificationStatus:string };
 
 export async function findAccountByEmail(email:string):Promise<Account|null>{
-  const [row]=await getDb().select({id:users.id,email:users.email,fullName:users.fullName,role:users.role,status:users.status,businessName:businesses.name,profileCompletion:workerProfiles.profileCompletion,workerVerification:workerProfiles.verificationLevel,businessVerification:businesses.verificationStatus}).from(users).leftJoin(businesses,eq(businesses.ownerUserId,users.id)).leftJoin(workerProfiles,eq(workerProfiles.userId,users.id)).where(eq(users.email,email.trim().toLowerCase())).limit(1);
+  const [row]=await getDb().select({id:users.id,email:users.email,fullName:users.fullName,role:users.role,status:users.status,businessName:businesses.name,profileCompletion:workerProfiles.profileCompletion,workerVerification:workerProfiles.verificationLevel,businessVerification:businesses.verificationStatus}).from(users).leftJoin(businessMembers,eq(businessMembers.userId,users.id)).leftJoin(businesses,eq(businesses.id,businessMembers.businessId)).leftJoin(workerProfiles,eq(workerProfiles.userId,users.id)).where(eq(users.email,email.trim().toLowerCase())).limit(1);
   if(!row||row.status!=="ACTIVE"||!isRole(row.role))return null;
   return{id:row.id,email:row.email,fullName:row.fullName||row.email,role:row.role,businessName:row.businessName??null,profileCompletion:row.profileCompletion??35,verificationStatus:row.workerVerification??row.businessVerification??"DRAFT"};
 }
@@ -21,9 +21,10 @@ export function roleHome(role:Role):string{
 }
 
 export async function requireAccount(returnTo:string,allowed?:readonly Role[]):Promise<Account>{
-  const identity=await requireChatGPTUser(returnTo);
+  const identity=await sessionUserFromCookies();
+  if(!identity)redirect(`/masuk?return_to=${encodeURIComponent(safeReturnPath(returnTo))}`);
   const account=await findAccountByEmail(identity.email);
-  if(!account)redirect(`/daftar?return_to=${encodeURIComponent(returnTo)}`);
+  if(!account)redirect("/masuk");
   if(allowed&&!allowed.includes(account.role))redirect(`/akses-ditolak?from=${encodeURIComponent(returnTo)}`);
   return account;
 }

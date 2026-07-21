@@ -53,6 +53,31 @@ export const workerProfiles = sqliteTable("worker_profiles", {
   ...timestamps,
 }, (table) => [uniqueIndex("worker_profile_user_idx").on(table.userId), index("worker_profile_city_idx").on(table.city)]);
 
+export const workerPaymentAccounts = sqliteTable("worker_payment_accounts", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  bankCode: text("bank_code").notNull(),
+  accountName: text("account_name").notNull(),
+  accountNumberEncrypted: text("account_number_encrypted").notNull(),
+  encryptionIv: text("encryption_iv").notNull(),
+  lastFour: text("last_four").notNull(),
+  status: text("status").notNull().default("PENDING_VERIFICATION"),
+  providerReference: text("provider_reference"),
+  verifiedAt: integer("verified_at", { mode: "timestamp_ms" }),
+  ...timestamps,
+}, (table) => [uniqueIndex("payment_account_user_idx").on(table.userId), index("payment_account_status_idx").on(table.status)]);
+
+export const notifications = sqliteTable("notifications", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  type: text("type").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  reference: text("reference").notNull(),
+  readAt: integer("read_at", { mode: "timestamp_ms" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [uniqueIndex("notification_reference_idx").on(table.reference), index("notification_user_read_idx").on(table.userId, table.readAt)]);
+
 export const userConsents = sqliteTable("user_consents", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull().references(() => users.id),
@@ -62,6 +87,51 @@ export const userConsents = sqliteTable("user_consents", {
   grantedAt: integer("granted_at", { mode: "timestamp_ms" }).notNull(),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 }, (table) => [uniqueIndex("consent_user_type_version_idx").on(table.userId, table.type, table.version)]);
+
+export const userCredentials = sqliteTable("user_credentials", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  passwordHash: text("password_hash").notNull(),
+  passwordSalt: text("password_salt").notNull(),
+  passwordIterations: integer("password_iterations").notNull(),
+  failedAttempts: integer("failed_attempts").notNull().default(0),
+  lockedUntil: integer("locked_until", { mode: "timestamp_ms" }),
+  passwordUpdatedAt: integer("password_updated_at", { mode: "timestamp_ms" }).notNull(),
+  ...timestamps,
+}, (table) => [uniqueIndex("credential_user_idx").on(table.userId)]);
+
+export const userSessions = sqliteTable("user_sessions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  tokenHash: text("token_hash").notNull(),
+  deviceName: text("device_name").notNull(),
+  ipHash: text("ip_hash").notNull(),
+  userAgentHash: text("user_agent_hash").notNull(),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  lastSeenAt: integer("last_seen_at", { mode: "timestamp_ms" }).notNull(),
+  revokedAt: integer("revoked_at", { mode: "timestamp_ms" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [uniqueIndex("session_token_idx").on(table.tokenHash), index("session_user_idx").on(table.userId, table.expiresAt)]);
+
+export const authRateLimits = sqliteTable("auth_rate_limits", {
+  id: text("id").primaryKey(),
+  keyHash: text("key_hash").notNull(),
+  action: text("action").notNull(),
+  windowStartedAt: integer("window_started_at", { mode: "timestamp_ms" }).notNull(),
+  attempts: integer("attempts").notNull().default(1),
+  blockedUntil: integer("blocked_until", { mode: "timestamp_ms" }),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [uniqueIndex("auth_rate_key_idx").on(table.keyHash, table.action), index("auth_rate_block_idx").on(table.blockedUntil)]);
+
+export const businessMembers = sqliteTable("business_members", {
+  id: text("id").primaryKey(),
+  businessId: text("business_id").notNull().references(() => businesses.id),
+  userId: text("user_id").notNull().references(() => users.id),
+  role: text("role").notNull(),
+  status: text("status").notNull().default("ACTIVE"),
+  invitedByUserId: text("invited_by_user_id").references(() => users.id),
+  ...timestamps,
+}, (table) => [uniqueIndex("business_member_user_idx").on(table.businessId, table.userId), index("business_member_role_idx").on(table.userId, table.role)]);
 
 export const verificationSubmissions = sqliteTable("verification_submissions", {
   id: text("id").primaryKey(),

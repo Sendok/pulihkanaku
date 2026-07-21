@@ -2,7 +2,7 @@
 
 Authorization dilakukan pada server melalui kombinasi role, ownership, status resource, dan state workflow. Menyembunyikan tombol di UI bukan kontrol keamanan.
 
-Untuk hosted preview, identitas berasal dari header dispatch Sign in with ChatGPT. Header demo hanya diterima ketika `NODE_ENV` bukan production. Mapping role permanen akan dibaca dari membership database pada milestone autentikasi.
+Identitas browser berasal dari session PulihkanAku yang tersimpan server-side. Header demo hanya diterima ketika `NODE_ENV` bukan production. Akses bisnis diperiksa melalui `business_members`, bukan role yang dikirim client.
 
 Kebijakan yang tersedia saat ini:
 

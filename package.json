@@ -2,6 +2,7 @@
   "name": "pulihkanaku",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.13.1",
   "engines": {
     "node": ">=22.13.0"
   },
@@ -40,6 +41,7 @@
     "react-server-dom-webpack": "19.2.6",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
+    "turbo": "^2.5.0",
     "vinext": "0.0.50",
     "vite": "8.0.13",
     "wrangler": "4.92.0"

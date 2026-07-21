@@ -1,0 +1,8 @@
+const PASSWORD_ITERATIONS=310_000;
+export async function hashPassword(password:string,salt=randomBytes(16),iterations=PASSWORD_ITERATIONS){const material=await crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveBits"]);const bits=await crypto.subtle.deriveBits({name:"PBKDF2",hash:"SHA-256",salt,iterations},material,256);return{hash:base64url(new Uint8Array(bits)),salt:base64url(salt),iterations}}
+export async function verifyPassword(password:string,expectedHash:string,salt:string,iterations:number):Promise<boolean>{const result=await hashPassword(password,fromBase64url(salt),iterations);return timingSafeEqual(result.hash,expectedHash)}
+export function validatePassword(password:string):string|null{if(password.length<10)return"Kata sandi minimal 10 karakter.";if(password.length>128)return"Kata sandi terlalu panjang.";if(!/[a-zA-Z]/.test(password)||!/[0-9]/.test(password))return"Kata sandi harus memuat huruf dan angka.";return null}
+function randomBytes(length:number){const bytes=new Uint8Array(length);crypto.getRandomValues(bytes);return bytes}
+function base64url(bytes:Uint8Array){let binary="";for(const byte of bytes)binary+=String.fromCharCode(byte);return btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"")}
+function fromBase64url(value:string){const normalized=value.replace(/-/g,"+").replace(/_/g,"/").padEnd(Math.ceil(value.length/4)*4,"=");const binary=atob(normalized);return Uint8Array.from(binary,char=>char.charCodeAt(0))}
+function timingSafeEqual(left:string,right:string){if(left.length!==right.length)return false;let difference=0;for(let index=0;index<left.length;index++)difference|=left.charCodeAt(index)^right.charCodeAt(index);return difference===0}

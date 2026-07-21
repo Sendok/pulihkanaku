@@ -8,6 +8,9 @@ import { assertApplicationTransition, assertAssignmentTransition } from "../lib/
 import { assertDisputeTransition, assertPayoutTransition } from "../lib/domain/finance-state-machine.ts";
 import { normalizeIndonesianPhone } from "../lib/domain/phone.ts";
 import { safeDocumentName, validateVerificationFile } from "../lib/domain/verification-document.ts";
+import { hashPassword, validatePassword, verifyPassword } from "../lib/security/credentials.ts";
+import { safeReturnPath } from "../lib/security/paths.ts";
+import { encryptPayoutValue } from "../lib/security/encryption.ts";
 
 test("job state machine accepts the funded publish path", () => {
   assert.doesNotThrow(() => assertJobTransition("PENDING_FUNDING", "PUBLISHED"));
@@ -59,4 +62,19 @@ test("verification documents require an allowed MIME type and matching signature
   await assert.rejects(() => validateVerificationFile(new File(["<script>alert(1)</script>"], "ktp.jpg", { type: "image/jpeg" })), /INVALID_FILE_SIGNATURE/);
   await assert.rejects(() => validateVerificationFile(new File(["hello"], "ktp.svg", { type: "image/svg+xml" })), /UNSUPPORTED_FILE_TYPE/);
   assert.equal(safeDocumentName('../../KTP "Rina".pdf'), "KTP Rina.pdf");
+});
+
+test("password hashing and return paths are safe", async () => {
+  assert.equal(validatePassword("pendek1"), "Kata sandi minimal 10 karakter.");
+  assert.equal(validatePassword("KataSandiAman123"), null);
+  const credential=await hashPassword("KataSandiAman123");
+  assert.equal(await verifyPassword("KataSandiAman123",credential.hash,credential.salt,credential.iterations),true);
+  assert.equal(await verifyPassword("KataSandiSalah123",credential.hash,credential.salt,credential.iterations),false);
+  assert.equal(safeReturnPath("//evil.example"),"/");
+  assert.equal(safeReturnPath("/app?tab=profil"),"/app?tab=profil");
+});
+
+test("payout account numbers are encrypted with randomized IVs", async () => {
+  const first=await encryptPayoutValue("1234567890");const second=await encryptPayoutValue("1234567890");
+  assert.notEqual(first.ciphertext,"1234567890");assert.notEqual(first.iv,second.iv);assert.notEqual(first.ciphertext,second.ciphertext);
 });

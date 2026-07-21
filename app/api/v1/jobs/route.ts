@@ -1,6 +1,6 @@
 import { and, asc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { jobs, businesses } from "@/db/schema";
+import { jobs, businesses, businessMembers } from "@/db/schema";
 import { fail, ok, requestId } from "@/lib/api-response";
 import { assertAuthorized } from "@/lib/domain/authorization";
 import { requireApiIdentity } from "@/lib/identity";
@@ -38,8 +38,9 @@ export async function POST(request: Request) {
   const id = crypto.randomUUID();
   const businessId = typeof body.businessId === "string" ? body.businessId : "business_kirana";
   try {
-    const [ownedBusiness] = await getDb().select({ id: businesses.id, verificationStatus: businesses.verificationStatus }).from(businesses).where(and(eq(businesses.id, businessId), eq(businesses.ownerUserId, identity.id))).limit(1);
+    const [ownedBusiness] = await getDb().select({ id: businesses.id, verificationStatus: businesses.verificationStatus, membershipRole: businessMembers.role }).from(businesses).innerJoin(businessMembers,and(eq(businessMembers.businessId,businesses.id),eq(businessMembers.userId,identity.id),eq(businessMembers.status,"ACTIVE"))).where(and(eq(businesses.id, businessId))).limit(1);
     if (!ownedBusiness) return fail("BUSINESS_NOT_OWNED", "Bisnis tidak ditemukan atau bukan milik akun ini.", reqId, 403);
+    if(!["BUSINESS_OWNER","BUSINESS_STAFF","BUSINESS_HR"].includes(ownedBusiness.membershipRole))return fail("BUSINESS_MEMBERSHIP_REQUIRED","Membership bisnis tidak memiliki izin membuat pekerjaan.",reqId,403);
     if (ownedBusiness.verificationStatus !== "VERIFIED") return fail("BUSINESS_VERIFICATION_REQUIRED", "Bisnis harus terverifikasi sebelum membuat pekerjaan.", reqId, 403);
     await getDb().insert(jobs).values({
       id, businessId, createdByEmail: identity.email, slug: `${String(body.title).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${id.slice(0, 8)}`,

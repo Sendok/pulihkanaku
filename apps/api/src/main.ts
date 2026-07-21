@@ -1,0 +1,5 @@
+import "reflect-metadata";
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module.js";
+async function bootstrap(){const app=await NestFactory.create(AppModule,{bufferLogs:true});app.setGlobalPrefix("api/v1");app.enableShutdownHooks();await app.listen(Number(process.env.PORT??4000),"0.0.0.0")}
+void bootstrap();

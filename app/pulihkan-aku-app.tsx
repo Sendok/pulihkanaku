@@ -201,12 +201,12 @@ function WorkerDashboard({ onBack, displayName = "Pengguna", profileCompletion =
     <div className="product-shell">
       <header className="product-header">
         <Logo />
-        <div className="header-actions"><button className="icon-button" aria-label="Notifikasi"><Bell size={20} /></button><button className="profile-chip" onClick={() => window.location.assign("/signout-with-chatgpt?return_to=/")}><span>{displayName.slice(0,2).toUpperCase()}</span><span><small>Akun pekerja</small>{displayName}</span><ChevronDown size={16} /></button></div>
+        <div className="header-actions"><button className="icon-button" aria-label="Notifikasi"><Bell size={20} /></button><a className="profile-chip" href="/akun/keamanan"><span>{displayName.slice(0,2).toUpperCase()}</span><span><small>Akun pekerja</small>{displayName}</span><ChevronDown size={16} /></a></div>
       </header>
       <main className="dashboard-main">
         <section className="welcome-row">
           <div><button className="back-link" onClick={onBack}>← Kembali ke halaman utama</button><p className="eyebrow">Ruang pekerja</p><h1>Selamat datang, {displayName}.</h1><p>Mari cari peluang yang paling sesuai hari ini.</p></div>
-          <a className="profile-progress" href="/app/onboarding"><div className="progress-ring">{profileCompletion}<span>%</span></div><div><strong>{verificationStatus==="IDENTITY_VERIFIED"?"Identitas terverifikasi":"Lengkapi profil dan verifikasi"}</strong><span>{verificationStatus==="IDENTITY_VERIFIED"?"Profilmu siap digunakan":"Buka akses fitur pekerjaan sensitif"}</span></div><ArrowRight /></a>
+          <a className="profile-progress" href={verificationStatus==="IDENTITY_VERIFIED"?"/app/payout":"/app/onboarding"}><div className="progress-ring">{profileCompletion}<span>%</span></div><div><strong>{verificationStatus==="IDENTITY_VERIFIED"?"Tambahkan rekening payout":"Lengkapi profil dan verifikasi"}</strong><span>{verificationStatus==="IDENTITY_VERIFIED"?"Rekening dienkripsi dan diverifikasi":"Buka akses fitur pekerjaan sensitif"}</span></div><ArrowRight /></a>
         </section>
         <section className="stats-grid">
           <article className="income-stat"><div><span className="stat-icon"><WalletCards /></span><span>Pendapatan bulan ini</span></div><strong>{money.format(975000)}</strong><small><TrendingUp size={14} /> Naik Rp325.000 dari Juni</small></article>
@@ -233,7 +233,7 @@ function BusinessDashboard({ onBack, displayName = "Bisnis Anda", verificationSt
   const [published, setPublished] = useState(false);
   return (
     <div className="product-shell business-shell">
-      <header className="product-header"><Logo /><div className="header-actions"><button className="icon-button" aria-label="Notifikasi"><Bell size={20} /></button><button className="profile-chip" onClick={() => window.location.assign("/signout-with-chatgpt?return_to=/")}><span>{displayName.slice(0,2).toUpperCase()}</span><span><small>Akun bisnis</small>{displayName}</span><ChevronDown size={16} /></button></div></header>
+      <header className="product-header"><Logo /><div className="header-actions"><button className="icon-button" aria-label="Notifikasi"><Bell size={20} /></button><a className="profile-chip" href="/akun/keamanan"><span>{displayName.slice(0,2).toUpperCase()}</span><span><small>Akun bisnis</small>{displayName}</span><ChevronDown size={16} /></a></div></header>
       <main className="dashboard-main">
         <section className="welcome-row"><div><button className="back-link" onClick={onBack}>← Kembali ke halaman utama</button><p className="eyebrow">Dashboard bisnis</p><h1>Selamat datang, {displayName}.</h1><p>Semua kebutuhan tenaga hari ini dalam kendali.</p></div><button className="primary-button" onClick={() => setPublished(true)}><BriefcaseBusiness size={18} /> Buat pekerjaan</button></section>
         {verificationStatus!=="VERIFIED"&&<a className="verification-banner" href="/business/onboarding"><ShieldCheck/><span><strong>Verifikasi bisnis diperlukan</strong>Lengkapi data agar pekerjaan dapat ditinjau dan dipublikasikan.</span><ArrowRight/></a>}
