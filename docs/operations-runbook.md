@@ -32,6 +32,8 @@ For a disposable local proof using isolated volumes, run `npm run test:external-
 - Status: `docker compose --env-file .env.production -f docker-compose.prod.yml ps`
 - Follow API/worker logs: `docker compose --env-file .env.production -f docker-compose.prod.yml logs -f --tail=200 api worker`
 - Re-run dependency checks: `docker compose --env-file .env.production -f docker-compose.prod.yml exec -T api node apps/api/dist/preflight.js`
+- Inspect cutover blockers: `docker compose --env-file .env.production -f docker-compose.prod.yml exec -T api node apps/api/dist/cutover-check.js`
+- Enforce a quiet cutover gate: `docker compose --env-file .env.production -f docker-compose.prod.yml exec -T -e REQUIRE_QUIESCENT=true api node apps/api/dist/cutover-check.js`
 - Re-run safe HTTP checks: `npm run test:production-smoke`
 - Stop services without deleting data: `docker compose --env-file .env.production -f docker-compose.prod.yml stop`
 
@@ -42,6 +44,7 @@ Do not run `down --volumes` against the production project; that removes persist
 - Run `scripts/backup-postgres.sh` and `scripts/backup-object-storage.sh` to an explicit encrypted backup mount. Copy checksum files with the database dumps.
 - Retain daily backups for 14 days and monthly backups for 12 months unless the approved retention policy says otherwise.
 - Test restoration in an isolated environment at least quarterly. Restore scripts require `CONFIRM_RESTORE=restore-pulihkanaku` because they can replace existing data.
+- Test a dump without touching production using `npm run drill:restore -- /absolute/path/pulihkanaku-TIMESTAMP.dump /absolute/path/object-backup`. The second argument is optional; all drill containers and their data are removed after the check.
 - After restore, run integrity counts for users, assignments, payouts, ledger entries, and object keys; then rotate session, webhook, and provider secrets if compromise is suspected.
 
 ## Incident controls

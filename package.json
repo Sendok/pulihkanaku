@@ -20,6 +20,7 @@
     "probe:providers": "node --env-file=.env.production scripts/provider-preflight.mjs",
     "test:provider-send": "node --env-file=.env.production scripts/send-provider-test.mjs",
     "deploy:self-host": "scripts/deploy-production.sh",
+    "drill:restore": "scripts/restore-drill.sh",
     "build:services": "corepack pnpm --filter @pulihkanaku/config build && corepack pnpm --filter @pulihkanaku/database build && corepack pnpm --filter @pulihkanaku/api build && corepack pnpm --filter @pulihkanaku/worker build",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern 'apps/**/dist' --ignore-pattern 'packages/**/dist' --ignore-pattern .next --ignore-pattern .wrangler",
     "typecheck": "tsc --noEmit",

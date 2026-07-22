@@ -38,7 +38,9 @@ test("self-host tooling includes dependency, malware, heartbeat, and webhook che
   const preflight = readFileSync("apps/api/src/preflight.ts", "utf8");
   const smoke = readFileSync("tests/production-smoke.mjs", "utf8");
   const deployment = readFileSync("scripts/deploy-production.sh", "utf8");
+  const cutover = readFileSync("apps/api/src/cutover-check.ts", "utf8");
   for (const boundary of ["postgres", "redis", "minio", "clamav-signature", "worker-heartbeat"]) assert.match(preflight, new RegExp(boundary));
   assert.match(smoke, /payments\/webhooks\/xendit/);
   assert.match(deployment, /preflight\.js/);
+  assert.match(cutover, /REQUIRE_QUIESCENT/);
 });
