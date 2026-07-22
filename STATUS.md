@@ -39,10 +39,11 @@ Terakhir diperbarui: 22 Juli 2026 (Asia/Jakarta)
 - Runtime package build untuk shared config/database, dependency-aware readiness, migration runner, hardened production Compose, CI workflow, serta backup/restore PostgreSQL dan MinIO dengan checksum/confirmation guard.
 - Public jobs dinamis hanya menampilkan pekerjaan `PUBLISHED` + `FUNDED` dari bisnis terverifikasi, CMS panduan dengan admin publishing, PWA public-only cache, sitemap, halaman paket, serta perencana skenario penghasilan tanpa janji pendapatan.
 - Regression suite lulus: lint, unit/contract, typecheck, production build, rendered integration, D1 migration, vertical-slice E2E, serta build seluruh service.
+- Paket self-host tersedia dengan production environment validator, dry-run/deploy automation, disposable external-stack integration, PostgreSQL/Redis/MinIO/ClamAV/worker preflight, provider credential probe, guarded notification send test, HTTP/webhook security smoke test, dan reverse-proxy TLS template.
 
 ## Sedang dikerjakan berikutnya
 
-- Menjalankan PostgreSQL/Redis/MinIO/ClamAV service integration secara lokal setelah Docker daemon tersedia; workflow yang sama sudah ditambahkan ke CI.
+- Menjalankan `npm run test:external-stack` pada host dengan Docker daemon; automasinya sudah tersedia tetapi daemon lokal belum aktif di lingkungan pengembangan ini.
 - Mengaktifkan credential notification/provider live, merchant approval, serta mencatat referensi izin provider yang diverifikasi saat go-live.
 - Cutover traffic dari adapter D1 preview ke service PostgreSQL setelah staging soak test dan backup/restore drill.
 - Menambahkan realtime messaging UI worker/business dan admin risk/support console di atas API/SSE yang sudah selesai.

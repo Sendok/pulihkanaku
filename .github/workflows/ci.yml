@@ -26,6 +26,8 @@ jobs:
       REDIS_URL: redis://127.0.0.1:6379
       STORAGE_ENDPOINT: http://127.0.0.1:9000
       STORAGE_BUCKET_PRIVATE: pulihkanaku-private
+      STORAGE_ACCESS_KEY: minio
+      STORAGE_SECRET_KEY: minio-development-only
       SESSION_SECRET: ci-session-secret-at-least-thirty-two-characters
       OTP_SECRET: ci-otp-secret-at-least-thirty-two-characters
       PAYOUT_ENCRYPTION_KEY: Y2ktcGF5b3V0LWtleS0zMi1ieXRlcy1sb25nISEhISE

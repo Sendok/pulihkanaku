@@ -5,12 +5,14 @@ import { Queue, Worker, type Job } from "bullmq";
 import { Redis } from "ioredis";
 import { createDecipheriv, createHash } from "node:crypto";
 import { connect } from "node:net";
+import { loadServiceEnvironment } from "@pulihkanaku/config";
 import { createPostgresDatabase } from "@pulihkanaku/database";
 
+loadServiceEnvironment();
 const redisUrl=process.env.REDIS_URL??"redis://localhost:6379";
 const connection=new Redis(redisUrl,{maxRetriesPerRequest:null});
 const queue=new Queue("pulihkanaku",{connection,defaultJobOptions:{attempts:6,backoff:{type:"exponential",delay:30_000},removeOnComplete:500,removeOnFail:2000}});
-const{pool}=createPostgresDatabase(process.env.DATABASE_URL??"postgres://pulihkanaku:pulihkanaku@localhost:5432/pulihkanaku");
+const{pool}=createPostgresDatabase(process.env.DATABASE_URL??"postgres://pulihkanaku:pulihkanaku@localhost:5432/pulihkanaku",Number(process.env.DATABASE_POOL_MAX??10));
 const storage=new S3Client({endpoint:process.env.STORAGE_ENDPOINT??"http://localhost:9000",region:process.env.STORAGE_REGION??"us-east-1",forcePathStyle:true,credentials:{accessKeyId:process.env.STORAGE_ACCESS_KEY??"minio",secretAccessKey:process.env.STORAGE_SECRET_KEY??"minio-development-only"}});
 const bucket=process.env.STORAGE_BUCKET_PRIVATE??"pulihkanaku-private";
 const delayFor=(attempt:number)=>Math.min(6*60*60*1000,30_000*2**attempt);
@@ -38,4 +40,6 @@ const worker=new Worker("pulihkanaku",processor,{connection,concurrency:Number(p
 worker.on("failed",async(job,error)=>{if(job?.name==="payout.process"&&job.attemptsMade>=(job.opts.attempts??1))await pool.query(`update payouts set status='FAILED',failure_code=coalesce(failure_code,$2),next_retry_at=null,updated_at=now() where id=$1 and status='RETRY_QUEUED'`,[job.data.payoutId,error.message.slice(0,100)])});
 await queue.upsertJobScheduler("payout-due-every-minute",{every:60_000},{name:"payout.dispatch-due",data:{}});
 await queue.upsertJobScheduler("operations-sla-every-five-minutes",{every:300_000},{name:"operations.escalate-sla",data:{}});
-const shutdown=async()=>{await worker.close();await queue.close();await connection.quit();await pool.end();process.exit(0)};process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);
+const heartbeat=async()=>connection.set("service:worker:heartbeat",new Date().toISOString(),"EX",45);
+await heartbeat();const heartbeatTimer=setInterval(()=>void heartbeat(),15_000);heartbeatTimer.unref();
+const shutdown=async()=>{clearInterval(heartbeatTimer);await worker.close();await queue.close();await connection.del("service:worker:heartbeat");await connection.quit();await pool.end();process.exit(0)};process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);

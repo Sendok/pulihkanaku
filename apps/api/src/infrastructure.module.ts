@@ -55,7 +55,7 @@ export class InfrastructureLifecycle implements OnApplicationShutdown {
 @Global()
 @Module({
   providers: [
-    { provide: POSTGRES, useFactory: () => createPostgresDatabase(process.env.DATABASE_URL ?? "postgres://pulihkanaku:pulihkanaku@localhost:5432/pulihkanaku").pool },
+    { provide: POSTGRES, useFactory: () => createPostgresDatabase(process.env.DATABASE_URL ?? "postgres://pulihkanaku:pulihkanaku@localhost:5432/pulihkanaku", Number(process.env.DATABASE_POOL_MAX ?? 10)).pool },
     { provide: REDIS, useFactory: () => new Redis(process.env.REDIS_URL ?? "redis://localhost:6379", { maxRetriesPerRequest: null, enableReadyCheck: true }) },
     { provide: WORK_QUEUE, inject: [REDIS], useFactory: (connection: Redis) => new Queue("pulihkanaku", { connection, defaultJobOptions: { attempts: 6, backoff: { type: "exponential", delay: 30_000 }, removeOnComplete: 500, removeOnFail: 2000 } }) },
     RateLimitService, ObjectStorageService, InfrastructureLifecycle,

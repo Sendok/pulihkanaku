@@ -47,13 +47,14 @@ services:
     command: ["node", "packages/database/dist/migrate.js"]
     environment:
       DATABASE_URL: postgresql://pulihkanaku:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/pulihkanaku
+      DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-10}
     depends_on: { postgres: { condition: service_healthy } }
     networks: [backend]
   api:
     build: { context: ., dockerfile: infrastructure/docker/api.Dockerfile }
     restart: unless-stopped
     environment: &service-environment
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-production}
       PORT: 4000
       DATABASE_URL: postgresql://pulihkanaku:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/pulihkanaku
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
@@ -67,6 +68,8 @@ services:
       OTP_SECRET: ${OTP_SECRET:?OTP_SECRET is required}
       PAYOUT_ENCRYPTION_KEY: ${PAYOUT_ENCRYPTION_KEY:?PAYOUT_ENCRYPTION_KEY is required}
       CORS_ORIGINS: ${CORS_ORIGINS:?CORS_ORIGINS is required}
+      PAYOUT_PROVIDER: ${PAYOUT_PROVIDER:-disabled}
+      XENDIT_API_URL: ${XENDIT_API_URL:-https://api.xendit.co}
       XENDIT_SECRET_API_KEY: ${XENDIT_SECRET_API_KEY:-}
       XENDIT_WEBHOOK_TOKEN: ${XENDIT_WEBHOOK_TOKEN:-}
       PAYOUT_PROVIDER_LICENSE_REFERENCE: ${PAYOUT_PROVIDER_LICENSE_REFERENCE:-}
@@ -75,6 +78,7 @@ services:
       EMAIL_FROM: ${EMAIL_FROM:-}
       NOTIFICATION_GATEWAY_URL: ${NOTIFICATION_GATEWAY_URL:-}
       NOTIFICATION_GATEWAY_TOKEN: ${NOTIFICATION_GATEWAY_TOKEN:-}
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-8}
     ports: ["127.0.0.1:${API_PORT:-4000}:4000"]
     depends_on:
       migrate: { condition: service_completed_successfully }
