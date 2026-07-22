@@ -12,6 +12,7 @@ const valid = {
   OTP_SECRET: "test-otp-secret-independent-32-characters",
   PAYOUT_ENCRYPTION_KEY: "Y2ktcGF5b3V0LWtleS0zMi1ieXRlcy1sb25nISEhISE",
   CORS_ORIGINS: "https://staging.pulihkanaku.test",
+  METRICS_TOKEN: "test-metrics-token-at-least-24-characters",
   PAYOUT_PROVIDER: "disabled",
   EMAIL_PROVIDER: "disabled",
   GO_LIVE: "false",
@@ -43,4 +44,9 @@ test("self-host tooling includes dependency, malware, heartbeat, and webhook che
   assert.match(smoke, /payments\/webhooks\/xendit/);
   assert.match(deployment, /preflight\.js/);
   assert.match(cutover, /REQUIRE_QUIESCENT/);
+});
+
+test("D1 cutover migrator transfers, checkpoints, and compares content",()=>{
+  const migrator=readFileSync("scripts/migrate-d1-to-postgres.mjs","utf8");
+  for(const contract of["CONFIRM_D1_CUTOVER","on conflict (id)","state.completed","sourceContentChecksum","targetContentChecksum","stableUuid","rollback"])assert.match(migrator,new RegExp(contract.replace(/[()]/g,"\\$&")));
 });

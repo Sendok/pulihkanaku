@@ -1,0 +1,1 @@
+import{MessagingConsole}from"@/app/_operations/messaging-console";import{requireAccount}from"@/lib/account";export const dynamic="force-dynamic";export default async function WorkerMessages(){await requireAccount("/app/messages",["WORKER"]);return<MessagingConsole home="/app" roleLabel="Worker"/>}

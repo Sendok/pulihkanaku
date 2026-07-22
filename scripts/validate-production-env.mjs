@@ -2,7 +2,7 @@ import { Buffer } from "node:buffer";
 
 const failures = [];
 const warnings = [];
-const required = ["POSTGRES_PASSWORD", "REDIS_PASSWORD", "MINIO_ROOT_USER", "MINIO_ROOT_PASSWORD", "SESSION_SECRET", "OTP_SECRET", "PAYOUT_ENCRYPTION_KEY", "CORS_ORIGINS"];
+const required = ["POSTGRES_PASSWORD", "REDIS_PASSWORD", "MINIO_ROOT_USER", "MINIO_ROOT_PASSWORD", "SESSION_SECRET", "OTP_SECRET", "PAYOUT_ENCRYPTION_KEY", "CORS_ORIGINS", "METRICS_TOKEN"];
 const placeholder = /(change[-_ ]?me|replace[-_ ]?me|example\.com|development[-_ ]?only)/i;
 const value = (key) => process.env[key]?.trim() ?? "";
 
@@ -13,6 +13,8 @@ for (const key of required) {
 for (const key of ["POSTGRES_PASSWORD", "REDIS_PASSWORD", "MINIO_ROOT_PASSWORD", "SESSION_SECRET", "OTP_SECRET"]) {
   if (value(key) && value(key).length < 24) failures.push(`${key} must contain at least 24 characters`);
 }
+if (value("METRICS_TOKEN") && value("METRICS_TOKEN").length < 24) failures.push("METRICS_TOKEN must contain at least 24 characters");
+if (value("ALERT_WEBHOOK_URL") && !value("ALERT_WEBHOOK_TOKEN")) failures.push("ALERT_WEBHOOK_TOKEN is required when ALERT_WEBHOOK_URL is configured");
 if (value("SESSION_SECRET") && value("SESSION_SECRET") === value("OTP_SECRET")) failures.push("SESSION_SECRET and OTP_SECRET must be independent");
 try {
   if (Buffer.from(value("PAYOUT_ENCRYPTION_KEY"), "base64url").length !== 32) failures.push("PAYOUT_ENCRYPTION_KEY must decode to exactly 32 bytes");

@@ -69,3 +69,13 @@ Konflik versi atau state mengembalikan HTTP 409. Audit log ditulis pada batch da
 - `GET|POST /api/v1/support/tickets` — support queue dengan SLA escalation.
 - `GET /api/v1/content`, `GET /api/v1/content/:slug`, serta admin create/update dengan optimistic version.
 - `GET /api/v1/subscription-plans` — katalog read-only. Checkout tidak tersedia sampai billing provider disetujui.
+
+Hosted D1 preview memakai surface UI-compatible berikut: `GET|POST /api/v1/conversations`, `GET|POST /api/v1/conversations/:id/messages`, `GET /api/v1/conversations/:id/events` (SSE dengan reconnect), `GET|POST /api/v1/support-tickets`, `GET /api/v1/admin/risk-cases`, `PATCH /api/v1/admin/risk-cases/:id`, dan `PATCH /api/v1/admin/support-tickets/:id`. Endpoint internal `/api/v1/internal/e2e-session` selalu 404 pada production.
+
+## Observability
+
+- `GET /api/v1/health/live` — liveness process.
+- `GET /api/v1/health/ready` — readiness PostgreSQL, Redis, storage, dan worker.
+- `GET /api/v1/observability/metrics` — Prometheus text format; wajib `Authorization: Bearer $METRICS_TOKEN` pada production.
+
+Setiap respons NestJS membawa `x-request-id` dan `x-trace-id`. `traceparent` W3C yang valid diteruskan sebagai trace ID; request selesai ditulis sebagai JSON log dengan status dan durasi. HTTP 5xx dan kegagalan worker terminal memanggil alert webhook secara terdeduplikasi.

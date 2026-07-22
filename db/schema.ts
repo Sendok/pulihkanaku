@@ -359,3 +359,47 @@ export const subscriptions = sqliteTable("subscriptions", {
   currentPeriodStart: integer("current_period_start", { mode: "timestamp_ms" }).notNull(), currentPeriodEnd: integer("current_period_end", { mode: "timestamp_ms" }).notNull(),
   cancelAtPeriodEnd: integer("cancel_at_period_end", { mode: "boolean" }).notNull().default(false), ...timestamps,
 }, (table) => [index("subscription_owner_idx").on(table.userId, table.businessId, table.status)]);
+
+export const conversations = sqliteTable("conversations", {
+  id: text("id").primaryKey(), assignmentId: text("assignment_id").references(() => jobAssignments.id), jobId: text("job_id").references(() => jobs.id),
+  type: text("type").notNull().default("ASSIGNMENT"), status: text("status").notNull().default("ACTIVE"), lastMessageAt: integer("last_message_at", { mode: "timestamp_ms" }), ...timestamps,
+}, (table) => [uniqueIndex("conversation_assignment_idx").on(table.assignmentId), index("conversation_last_message_idx").on(table.lastMessageAt)]);
+
+export const conversationParticipants = sqliteTable("conversation_participants", {
+  id: text("id").primaryKey(), conversationId: text("conversation_id").notNull().references(() => conversations.id), userId: text("user_id").notNull().references(() => users.id),
+  role: text("role").notNull(), lastReadAt: integer("last_read_at", { mode: "timestamp_ms" }), mutedUntil: integer("muted_until", { mode: "timestamp_ms" }), createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [uniqueIndex("conversation_participant_idx").on(table.conversationId, table.userId), index("conversation_user_idx").on(table.userId, table.conversationId)]);
+
+export const messages = sqliteTable("messages", {
+  id: text("id").primaryKey(), conversationId: text("conversation_id").notNull().references(() => conversations.id), senderUserId: text("sender_user_id").notNull().references(() => users.id),
+  body: text("body").notNull(), type: text("type").notNull().default("TEXT"), moderationStatus: text("moderation_status").notNull().default("ALLOWED"), idempotencyKey: text("idempotency_key").notNull(),
+  metadata: text("metadata"), editedAt: integer("edited_at", { mode: "timestamp_ms" }), deletedAt: integer("deleted_at", { mode: "timestamp_ms" }), createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [uniqueIndex("message_idempotency_idx").on(table.conversationId, table.senderUserId, table.idempotencyKey), index("message_conversation_idx").on(table.conversationId, table.createdAt)]);
+
+export const notificationPreferences = sqliteTable("notification_preferences", {
+  id: text("id").primaryKey(), userId: text("user_id").notNull().references(() => users.id), emailEnabled: integer("email_enabled", { mode: "boolean" }).notNull().default(true),
+  smsEnabled: integer("sms_enabled", { mode: "boolean" }).notNull().default(false), whatsappEnabled: integer("whatsapp_enabled", { mode: "boolean" }).notNull().default(true),
+  pushEnabled: integer("push_enabled", { mode: "boolean" }).notNull().default(false), quietHours: text("quiet_hours"), ...timestamps,
+}, (table) => [uniqueIndex("notification_preference_user_idx").on(table.userId)]);
+
+export const notificationDeliveries = sqliteTable("notification_deliveries", {
+  id: text("id").primaryKey(), notificationId: text("notification_id").notNull().references(() => notifications.id), channel: text("channel").notNull(), status: text("status").notNull().default("QUEUED"),
+  providerReference: text("provider_reference"), attempts: integer("attempts").notNull().default(0), nextRetryAt: integer("next_retry_at", { mode: "timestamp_ms" }), failureCode: text("failure_code"),
+  sentAt: integer("sent_at", { mode: "timestamp_ms" }), ...timestamps,
+}, (table) => [uniqueIndex("notification_delivery_idx").on(table.notificationId, table.channel), index("notification_delivery_retry_idx").on(table.status, table.nextRetryAt)]);
+
+export const riskEvents = sqliteTable("risk_events", {
+  id: text("id").primaryKey(), userId: text("user_id").references(() => users.id), type: text("type").notNull(), severity: text("severity").notNull(), score: integer("score").notNull(),
+  source: text("source").notNull(), referenceId: text("reference_id"), fingerprint: text("fingerprint").notNull(), metadata: text("metadata"), createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [uniqueIndex("risk_event_fingerprint_idx").on(table.fingerprint), index("risk_event_user_idx").on(table.userId, table.createdAt)]);
+
+export const riskCases = sqliteTable("risk_cases", {
+  id: text("id").primaryKey(), userId: text("user_id").references(() => users.id), status: text("status").notNull().default("OPEN"), priority: text("priority").notNull(), score: integer("score").notNull(),
+  reason: text("reason").notNull(), assignedToUserId: text("assigned_to_user_id").references(() => users.id), resolution: text("resolution"), resolvedAt: integer("resolved_at", { mode: "timestamp_ms" }), ...timestamps,
+}, (table) => [index("risk_case_queue_idx").on(table.status, table.priority, table.createdAt)]);
+
+export const supportTickets = sqliteTable("support_tickets", {
+  id: text("id").primaryKey(), userId: text("user_id").notNull().references(() => users.id), disputeId: text("dispute_id").references(() => disputes.id), category: text("category").notNull(),
+  subject: text("subject").notNull(), description: text("description").notNull(), status: text("status").notNull().default("OPEN"), priority: text("priority").notNull().default("NORMAL"),
+  assignedToUserId: text("assigned_to_user_id").references(() => users.id), slaDueAt: integer("sla_due_at", { mode: "timestamp_ms" }).notNull(), resolvedAt: integer("resolved_at", { mode: "timestamp_ms" }), ...timestamps,
+}, (table) => [index("support_ticket_queue_idx").on(table.status, table.slaDueAt)]);

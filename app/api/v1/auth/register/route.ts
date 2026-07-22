@@ -1,13 +1,13 @@
 import { getD1 } from "@/db";
 import { fail,requestId } from "@/lib/api-response";
 import { normalizeIndonesianPhone } from "@/lib/domain/phone";
-import { consumeAuthRateLimit,createSession,hashPassword,validatePassword } from "@/lib/security/auth";
+import { assertSameOrigin,consumeAuthRateLimit,createSession,hashPassword,validatePassword } from "@/lib/security/auth";
 
 export const dynamic="force-dynamic";
 type Registration={role?:"WORKER"|"BUSINESS_OWNER";email?:string;password?:string;fullName?:string;phone?:string;city?:string;district?:string;businessName?:string;businessCategory?:string;termsAccepted?:boolean;privacyAccepted?:boolean;marketingConsent?:boolean};
 
 export async function POST(request:Request){
-  const reqId=requestId(request);const body=await request.json().catch(()=>null)as Registration|null;const email=body?.email?.trim().toLowerCase()??"";
+  const reqId=requestId(request);if(!assertSameOrigin(request))return fail("INVALID_ORIGIN","Origin tidak valid.",reqId,403);const body=await request.json().catch(()=>null)as Registration|null;const email=body?.email?.trim().toLowerCase()??"";
   if(!(await consumeAuthRateLimit(request,email||"missing","register",5,30*60_000)))return fail("RATE_LIMITED","Terlalu banyak percobaan pendaftaran. Coba kembali nanti.",reqId,429);
   if(!body||!["WORKER","BUSINESS_OWNER"].includes(body.role??"")||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!body.fullName?.trim()||body.fullName.trim().length<3||!body.city?.trim()||!body.district?.trim())return fail("VALIDATION_ERROR","Lengkapi email, role, nama, kota, dan kecamatan.",reqId,422);
   const passwordError=validatePassword(body.password??"");if(passwordError)return fail("PASSWORD_INVALID",passwordError,reqId,422);

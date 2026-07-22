@@ -30,6 +30,9 @@ export const serviceEnvironment = z.object({
   NOTIFICATION_GATEWAY_TOKEN: z.string().optional().default(""),
   CLAMAV_HOST: z.string().min(1).default("localhost"),
   CLAMAV_PORT: z.coerce.number().int().min(1).max(65535).default(3310),
+  METRICS_TOKEN: z.string().optional().default(""),
+  ALERT_WEBHOOK_URL: z.string().optional().default(""),
+  ALERT_WEBHOOK_TOKEN: z.string().optional().default(""),
 }).superRefine((environment, context) => {
   if (environment.NODE_ENV !== "production") return;
   for (const key of ["SESSION_SECRET", "OTP_SECRET", "STORAGE_SECRET_KEY"] as const) {
@@ -50,6 +53,8 @@ export const serviceEnvironment = z.object({
   if (environment.NOTIFICATION_GATEWAY_URL && !environment.NOTIFICATION_GATEWAY_TOKEN) {
     context.addIssue({ code: "custom", path: ["NOTIFICATION_GATEWAY_TOKEN"], message: "required when NOTIFICATION_GATEWAY_URL is set" });
   }
+  if (!environment.METRICS_TOKEN || environment.METRICS_TOKEN.length < 24) context.addIssue({ code: "custom", path: ["METRICS_TOKEN"], message: "production metrics endpoint requires a token of at least 24 characters" });
+  if (environment.ALERT_WEBHOOK_URL && !environment.ALERT_WEBHOOK_TOKEN) context.addIssue({ code: "custom", path: ["ALERT_WEBHOOK_TOKEN"], message: "required when ALERT_WEBHOOK_URL is set" });
 });
 
 export function loadServiceEnvironment(source: NodeJS.ProcessEnv = process.env) {

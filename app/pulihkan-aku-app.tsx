@@ -222,7 +222,7 @@ function WorkerDashboard({ onBack, displayName = "Pengguna", profileCompletion =
         </section>
       </main>
       <nav className="bottom-nav" aria-label="Navigasi pekerja">
-        <a className="active" href="#atas"><House />Beranda</a><a href="#semua"><Search />Cari kerja</a><a href="#aktivitas"><BriefcaseBusiness />Aktivitas</a><a href="#pesan"><MessageCircle />Pesan</a><a href="#profil"><CircleUserRound />Profil</a>
+        <a className="active" href="#atas"><House />Beranda</a><a href="#semua"><Search />Cari kerja</a><a href="#aktivitas"><BriefcaseBusiness />Aktivitas</a><a href="/app/messages"><MessageCircle />Pesan</a><a href="#profil"><CircleUserRound />Profil</a>
       </nav>
       {selected && <JobDetail job={selected} applied={applied.includes(selected.id)} onClose={() => setSelected(null)} onApply={() => setApplied((current) => [...current, selected.id])} />}
     </div>
@@ -246,7 +246,7 @@ function BusinessDashboard({ onBack, displayName = "Bisnis Anda", verificationSt
           <aside className="panel candidate-panel"><div className="section-title"><div><p className="eyebrow">Kandidat terbaru</p><h2>Siap ditinjau</h2></div></div>{["Arini Rahma","Bagus Pratama","Dewi Lestari"].map((name, index) => <div className="candidate" key={name}><span className={`avatar avatar-${index}`}>{name.split(" ").map(x => x[0]).join("")}</span><span><strong>{name}</strong><small><Star size={12} fill="currentColor" /> {94-index*3}% cocok</small></span><button className="outline-button small">Tinjau</button></div>)}<button className="text-button full-link">Lihat 18 kandidat <ArrowRight /></button></aside>
         </div>
       </main>
-      <nav className="bottom-nav" aria-label="Navigasi bisnis"><a className="active"><LayoutDashboard />Beranda</a><a><BriefcaseBusiness />Pekerjaan</a><a><Users />Kandidat</a><a><MessageCircle />Pesan</a><a><Building2 />Bisnis</a></nav>
+      <nav className="bottom-nav" aria-label="Navigasi bisnis"><a className="active"><LayoutDashboard />Beranda</a><a><BriefcaseBusiness />Pekerjaan</a><a><Users />Kandidat</a><a href="/business/messages"><MessageCircle />Pesan</a><a><Building2 />Bisnis</a></nav>
     </div>
   );
 }

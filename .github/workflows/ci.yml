@@ -32,6 +32,7 @@ jobs:
       OTP_SECRET: ci-otp-secret-at-least-thirty-two-characters
       PAYOUT_ENCRYPTION_KEY: Y2ktcGF5b3V0LWtleS0zMi1ieXRlcy1sb25nISEhISE
       CORS_ORIGINS: http://localhost:3000
+      METRICS_TOKEN: ci-metrics-token-at-least-24-characters
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
@@ -42,6 +43,7 @@ jobs:
       - run: npm test
       - run: npm run typecheck
       - run: npm run build
+      - run: npm run test:e2e
       - run: npm run build:services
       - run: corepack pnpm --filter @pulihkanaku/database migrate
       - name: Service integration

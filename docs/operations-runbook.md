@@ -37,6 +37,31 @@ For a disposable local proof using isolated volumes, run `npm run test:external-
 - Re-run safe HTTP checks: `npm run test:production-smoke`
 - Stop services without deleting data: `docker compose --env-file .env.production -f docker-compose.prod.yml stop`
 
+## Observability and alerting
+
+1. Set a random `METRICS_TOKEN` (minimum 24 characters). Configure the metrics collector to scrape `/api/v1/observability/metrics` with `Authorization: Bearer <token>` over the private network.
+2. Set `ALERT_WEBHOOK_URL` and `ALERT_WEBHOOK_TOKEN` to the incident router. HTTP 5xx and terminal worker failures are emitted as JSON; identical alerts are suppressed for 60 seconds.
+3. Ingest stdout as structured JSON. Correlate `requestId`, `traceId`, queue job ID, route, status, and duration; redact provider credentials at the collector.
+4. Alert on readiness failure, sustained 5xx, payout terminal failure, overdue support SLA, critical risk cases, worker heartbeat age, and reconciliation mismatch. Keep alert acknowledgement and resolution notes outside the application log stream.
+
+## D1 to PostgreSQL data cutover
+
+The migrator transfers rows, converts legacy text IDs to deterministic UUIDs, maps renamed columns, performs idempotent upserts, checkpoints completed tables, and compares source/target IDs plus normalized content checksums.
+
+1. Apply all PostgreSQL migrations and take D1/PostgreSQL backups. Keep application writes quiescent.
+2. Export `DATABASE_URL`. For local rehearsal run `node scripts/migrate-d1-to-postgres.mjs --local`; this executes every write inside a rolled-back transaction and prints differences.
+3. For remote rehearsal run `npm run cutover:d1:dry-run`. Optional overrides are `D1_WRANGLER_CONFIG`, `D1_BINDING`, and `CUTOVER_STATE_FILE`.
+4. Apply with `CONFIRM_D1_CUTOVER=migrate-pulihkanaku npm run cutover:d1:apply`. A non-zero exit means at least one table has missing IDs or a content-checksum mismatch; do not switch traffic.
+5. Resume an interrupted apply with the same command. Use `--reset-state` only after investigating and backing up the target. Then run the quiescent cutover gate and smoke tests before changing traffic.
+
+## Repeatable QA harnesses
+
+- Full D1 role workflow: `npm run test:e2e`.
+- Static accessibility contracts: `npm test`.
+- Security boundary checks against a running frontend: `SECURITY_TEST_URL=https://staging.example.com npm run test:security`.
+- Read-only load smoke against NestJS health endpoints: `LOAD_TEST_URL=https://api-staging.example.com npm run test:load`.
+- Tune load thresholds with `LOAD_TEST_DURATION_SECONDS`, `LOAD_TEST_CONCURRENCY`, `LOAD_TEST_PATHS`, `LOAD_TEST_MAX_P95_MS`, and `LOAD_TEST_MAX_ERROR_RATE`. Use a staging database and obtain explicit approval before load-testing any shared or production environment.
+
 Do not run `down --volumes` against the production project; that removes persistent service volumes.
 
 ## Backup and restore

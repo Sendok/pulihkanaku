@@ -20,6 +20,15 @@ export function roleHome(role:Role):string{
   return"/";
 }
 
+export function roleReturnPath(role:Role,requested:string|null|undefined):string{
+  const home=roleHome(role);const path=safeReturnPath(requested,home);
+  if(path.startsWith("/akun/"))return path;
+  if(role==="WORKER"&&path.startsWith("/app"))return path;
+  if(["BUSINESS_OWNER","BUSINESS_STAFF","BUSINESS_HR"].includes(role)&&path.startsWith("/business"))return path;
+  if(["SUPPORT_AGENT","VERIFICATION_AGENT","FINANCE_ADMIN","OPERATIONS_ADMIN","SUPER_ADMIN"].includes(role)&&path.startsWith("/admin"))return path;
+  return home;
+}
+
 export async function requireAccount(returnTo:string,allowed?:readonly Role[]):Promise<Account>{
   const identity=await sessionUserFromCookies();
   if(!identity)redirect(`/masuk?return_to=${encodeURIComponent(safeReturnPath(returnTo))}`);

@@ -57,6 +57,13 @@
       "when": 1784687025438,
       "tag": "0007_sloppy_talkback",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1784689493797,
+      "tag": "0008_cold_warstar",
+      "breakpoints": true
     }
   ]
 }

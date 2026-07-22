@@ -40,18 +40,23 @@ Terakhir diperbarui: 22 Juli 2026 (Asia/Jakarta)
 - Public jobs dinamis hanya menampilkan pekerjaan `PUBLISHED` + `FUNDED` dari bisnis terverifikasi, CMS panduan dengan admin publishing, PWA public-only cache, sitemap, halaman paket, serta perencana skenario penghasilan tanpa janji pendapatan.
 - Regression suite lulus: lint, unit/contract, typecheck, production build, rendered integration, D1 migration, vertical-slice E2E, serta build seluruh service.
 - Paket self-host tersedia dengan production environment validator, dry-run/deploy automation, disposable external-stack integration, PostgreSQL/Redis/MinIO/ClamAV/worker preflight, provider credential probe, guarded notification send test, HTTP/webhook security smoke test, isolated restore drill, quiet cutover gate, dan reverse-proxy TLS template.
+- UI messaging realtime worker/business dengan SSE, fallback polling, optimistic delivery, moderation feedback, offline/loading/empty/error states, dan support ticket drawer.
+- Admin operations console untuk risk case dan support ticket dengan SLA, resolution/escalation, auto-refresh, role authorization, audit trail, serta offline/loading/empty/error states.
+- Observability di service: structured JSON request/worker logs, request/trace propagation, protected Prometheus metrics, process error reporting, deduplicated HTTP 5xx/terminal-job alert hooks, dan production environment validation.
+- QA harness untuk browser E2E lintas role, semantic accessibility, origin/auth/traversal/mock-provider security boundaries, serta configurable read-only load test. Browser QA desktop/mobile lulus tanpa horizontal overflow atau kontrol tanpa accessible name.
+- Migrator D1 ke PostgreSQL memindahkan 38 tabel dalam dependency order, mengubah legacy ID secara deterministik, memetakan kolom, melakukan upsert/resume, dan membandingkan ID serta normalized content checksum sebelum cutover.
+- UI payout dan operasional menangani offline, retry, loading, empty state, idempotent pending delivery, dan provider failure dengan request reference.
 
 ## Sedang dikerjakan berikutnya
 
 - Menjalankan `npm run test:external-stack` pada host dengan Docker daemon; automasinya sudah tersedia tetapi daemon lokal belum aktif di lingkungan pengembangan ini.
 - Mengaktifkan credential notification/provider live, merchant approval, serta mencatat referensi izin provider yang diverifikasi saat go-live.
-- Cutover traffic dari adapter D1 preview ke service PostgreSQL setelah staging soak test dan backup/restore drill.
-- Menambahkan realtime messaging UI worker/business dan admin risk/support console di atas API/SSE yang sudah selesai.
+- Menjalankan migrator D1 → PostgreSQL, staging soak test, backup/restore drill, dan cutover traffic pada infrastruktur deployment.
 
 ## Belum selesai
 
-- Aktivasi notification delivery production dan observability/alert routing dengan credential operasional.
-- Browser automation lintas-browser, load/security penetration test, dan bukti eksekusi CI pada remote repository.
+- Aktivasi notification delivery production serta observability collector/alert routing dengan credential operasional.
+- Eksekusi load/security test yang lebih panjang dan bukti CI remote pada staging berizin; harness dan CI workflow sudah tersedia.
 - Subscription checkout/billing live; paket berbayar sengaja tetap `COMING_SOON` sampai provider dan kebijakan komersial disetujui.
 
 Hosted preview memiliki backend D1/R2 yang berfungsi. Implementasi service PostgreSQL/NestJS dan worker telah build/typecheck/contract/E2E-test, tetapi belum diklaim live-production: Docker daemon lokal tidak tersedia untuk service integration run dan aktivasi finansial/notifikasi masih memerlukan credential merchant serta verifikasi izin/status provider dari sumber resmi pada waktu go-live.

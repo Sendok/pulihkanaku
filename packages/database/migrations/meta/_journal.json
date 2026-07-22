@@ -22,6 +22,20 @@
       "when": 1784686680059,
       "tag": "0002_marvelous_pete_wisdom",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784689898144,
+      "tag": "0003_silly_devos",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1784690060104,
+      "tag": "0004_chunky_jubilee",
+      "breakpoints": true
     }
   ]
 }

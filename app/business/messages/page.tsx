@@ -1,0 +1,1 @@
+import{MessagingConsole}from"@/app/_operations/messaging-console";import{requireAccount}from"@/lib/account";export const dynamic="force-dynamic";export default async function BusinessMessages(){await requireAccount("/business/messages",["BUSINESS_OWNER","BUSINESS_STAFF","BUSINESS_HR"]);return<MessagingConsole home="/business" roleLabel="Bisnis"/>}

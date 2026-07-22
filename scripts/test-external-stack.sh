@@ -13,6 +13,7 @@ export SESSION_SECRET="integration-session-secret-at-least-32-characters"
 export OTP_SECRET="integration-otp-secret-independent-32-characters"
 export PAYOUT_ENCRYPTION_KEY="Y2ktcGF5b3V0LWtleS0zMi1ieXRlcy1sb25nISEhISE"
 export CORS_ORIGINS="http://localhost:${API_PORT}"
+export METRICS_TOKEN="integration-metrics-token-32-characters"
 export PAYOUT_PROVIDER=mock EMAIL_PROVIDER=mock
 
 compose() { docker compose -p "$project" -f docker-compose.prod.yml "$@"; }
