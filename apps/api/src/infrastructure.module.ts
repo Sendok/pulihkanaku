@@ -1,5 +1,5 @@
 import { Global, Inject, Injectable, Module, OnApplicationShutdown } from "@nestjs/common";
-import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { HeadBucketCommand, HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Queue } from "bullmq";
 import { Redis } from "ioredis";
@@ -43,6 +43,7 @@ export class ObjectStorageService {
     return getSignedUrl(this.client, new PutObjectCommand({ Bucket: this.bucket, Key: objectKey, ContentType: mimeType, ServerSideEncryption: "AES256" }), { expiresIn: 300 });
   }
   async head(objectKey: string) { return this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: objectKey })); }
+  async ready() { await this.client.send(new HeadBucketCommand({ Bucket: this.bucket })); }
 }
 
 @Injectable()

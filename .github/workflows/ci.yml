@@ -1,0 +1,52 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env: { POSTGRES_DB: pulihkanaku, POSTGRES_USER: pulihkanaku, POSTGRES_PASSWORD: pulihkanaku }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U pulihkanaku" --health-interval 5s --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:7.4-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://pulihkanaku:pulihkanaku@127.0.0.1:5432/pulihkanaku
+      REDIS_URL: redis://127.0.0.1:6379
+      STORAGE_ENDPOINT: http://127.0.0.1:9000
+      STORAGE_BUCKET_PRIVATE: pulihkanaku-private
+      SESSION_SECRET: ci-session-secret-at-least-thirty-two-characters
+      OTP_SECRET: ci-otp-secret-at-least-thirty-two-characters
+      PAYOUT_ENCRYPTION_KEY: Y2ktcGF5b3V0LWtleS0zMi1ieXRlcy1sb25nISEhISE
+      CORS_ORIGINS: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with: { node-version: "22.x" }
+      - run: corepack enable
+      - run: corepack pnpm install --frozen-lockfile
+      - run: npm run lint
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm run build:services
+      - run: corepack pnpm --filter @pulihkanaku/database migrate
+      - name: Service integration
+        run: |
+          node apps/api/dist/main.js > /tmp/pulihkanaku-api.log 2>&1 &
+          api_pid=$!
+          trap 'kill "$api_pid" 2>/dev/null || true; cat /tmp/pulihkanaku-api.log' EXIT
+          node -e 'let n=0;const ping=()=>fetch("http://127.0.0.1:4000/api/v1/health/live").then(r=>{if(!r.ok)throw 0}).catch(()=>{if(++n>30)process.exit(1);setTimeout(ping,500)});ping()'
+          sleep 2
+          npm run test:service

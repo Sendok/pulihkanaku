@@ -33,17 +33,24 @@ Terakhir diperbarui: 22 Juli 2026 (Asia/Jakarta)
 - OTP contact verification/account recovery asynchronous dengan HMAC hash, expiry, resend cooldown, attempt limit, one-time recovery token, reset password, pencabutan sesi, serta notification adapters.
 - ClamAV asynchronous malware scan untuk dokumen verifikasi dan evidence; objek terinfeksi ditandai lalu dihapus dari bucket privat.
 - Adapter payout Xendit domestik Indonesia, idempotency key, exponential retry, terminal/transient failure handling, token-verified webhook inbox, ledger settlement, mismatch detection, dan manual reconciliation UI ber-audit.
+- PostgreSQL domain diperluas menjadi 36 tabel untuk conversation/message, notification preference/delivery, risk event/case, support SLA, CMS, plan, dan subscription state.
+- Messaging realtime backend melalui SSE + Redis pub/sub, participant authorization, message idempotency, unread cursor, moderation permintaan OTP/kata sandi, serta notification fan-out asynchronous.
+- Risk workflow untuk login failure, OTP brute force, off-platform payment request, risk aggregation/case queue, dan admin resolution; support ticket dan dispute SLA diekskalasi oleh scheduler.
+- Runtime package build untuk shared config/database, dependency-aware readiness, migration runner, hardened production Compose, CI workflow, serta backup/restore PostgreSQL dan MinIO dengan checksum/confirmation guard.
+- Public jobs dinamis hanya menampilkan pekerjaan `PUBLISHED` + `FUNDED` dari bisnis terverifikasi, CMS panduan dengan admin publishing, PWA public-only cache, sitemap, halaman paket, serta perencana skenario penghasilan tanpa janji pendapatan.
+- Regression suite lulus: lint, unit/contract, typecheck, production build, rendered integration, D1 migration, vertical-slice E2E, serta build seluruh service.
 
 ## Sedang dikerjakan berikutnya
 
-- Menjalankan migration dan integration test terhadap service container nyata setelah Docker daemon tersedia.
+- Menjalankan PostgreSQL/Redis/MinIO/ClamAV service integration secara lokal setelah Docker daemon tersedia; workflow yang sama sudah ditambahkan ke CI.
 - Mengaktifkan credential notification/provider live, merchant approval, serta mencatat referensi izin provider yang diverifikasi saat go-live.
 - Cutover traffic dari adapter D1 preview ke service PostgreSQL setelah staging soak test dan backup/restore drill.
+- Menambahkan realtime messaging UI worker/business dan admin risk/support console di atas API/SSE yang sudah selesai.
 
 ## Belum selesai
 
-- Messaging realtime, notification adapters, dispute, risk engine penuh.
-- E2E Playwright, integration/security tests, Docker production, CI, backup/restore.
-- Halaman publik dinamis, CMS, PWA offline, subscription, dan rencana penghasilan.
+- Aktivasi notification delivery production dan observability/alert routing dengan credential operasional.
+- Browser automation lintas-browser, load/security penetration test, dan bukti eksekusi CI pada remote repository.
+- Subscription checkout/billing live; paket berbayar sengaja tetap `COMING_SOON` sampai provider dan kebijakan komersial disetujui.
 
-Hosted preview memiliki backend D1/R2 yang berfungsi. Implementasi service PostgreSQL/NestJS dan worker telah build/typecheck/contract-test, tetapi belum diklaim live-production: Docker daemon lokal tidak tersedia untuk integration run dan aktivasi finansial masih memerlukan credential merchant serta verifikasi izin/status provider dari sumber resmi pada waktu go-live.
+Hosted preview memiliki backend D1/R2 yang berfungsi. Implementasi service PostgreSQL/NestJS dan worker telah build/typecheck/contract/E2E-test, tetapi belum diklaim live-production: Docker daemon lokal tidak tersedia untuk service integration run dan aktivasi finansial/notifikasi masih memerlukan credential merchant serta verifikasi izin/status provider dari sumber resmi pada waktu go-live.

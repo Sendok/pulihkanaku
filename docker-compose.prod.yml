@@ -1,0 +1,95 @@
+name: pulihkanaku-production
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pulihkanaku
+      POSTGRES_USER: pulihkanaku
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U pulihkanaku -d pulihkanaku"], interval: 10s, timeout: 5s, retries: 10 }
+    networks: [backend]
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD is required}"]
+    volumes: ["redis-data:/data"]
+    healthcheck: { test: ["CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping | grep PONG"], interval: 10s, timeout: 5s, retries: 10 }
+    environment: { REDIS_PASSWORD: "${REDIS_PASSWORD:?REDIS_PASSWORD is required}" }
+    networks: [backend]
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+    volumes: ["minio-data:/data"]
+    healthcheck: { test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"], interval: 10s, timeout: 5s, retries: 10 }
+    networks: [backend]
+  minio-init:
+    image: minio/mc:latest
+    depends_on: { minio: { condition: service_healthy } }
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+    entrypoint: ["/bin/sh", "-c", "mc alias set local http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD && mc mb --ignore-existing local/pulihkanaku-private && mc anonymous set none local/pulihkanaku-private"]
+    networks: [backend]
+  clamav:
+    image: clamav/clamav:1.4
+    restart: unless-stopped
+    volumes: ["clamav-data:/var/lib/clamav"]
+    healthcheck: { test: ["CMD", "/usr/local/bin/clamdcheck.sh"], interval: 30s, timeout: 10s, retries: 20, start_period: 120s }
+    networks: [backend]
+  migrate:
+    build: { context: ., dockerfile: infrastructure/docker/api.Dockerfile }
+    command: ["node", "packages/database/dist/migrate.js"]
+    environment:
+      DATABASE_URL: postgresql://pulihkanaku:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/pulihkanaku
+    depends_on: { postgres: { condition: service_healthy } }
+    networks: [backend]
+  api:
+    build: { context: ., dockerfile: infrastructure/docker/api.Dockerfile }
+    restart: unless-stopped
+    environment: &service-environment
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://pulihkanaku:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/pulihkanaku
+      REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_BUCKET_PRIVATE: pulihkanaku-private
+      STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: 3310
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+      OTP_SECRET: ${OTP_SECRET:?OTP_SECRET is required}
+      PAYOUT_ENCRYPTION_KEY: ${PAYOUT_ENCRYPTION_KEY:?PAYOUT_ENCRYPTION_KEY is required}
+      CORS_ORIGINS: ${CORS_ORIGINS:?CORS_ORIGINS is required}
+      XENDIT_SECRET_API_KEY: ${XENDIT_SECRET_API_KEY:-}
+      XENDIT_WEBHOOK_TOKEN: ${XENDIT_WEBHOOK_TOKEN:-}
+      PAYOUT_PROVIDER_LICENSE_REFERENCE: ${PAYOUT_PROVIDER_LICENSE_REFERENCE:-}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-disabled}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      NOTIFICATION_GATEWAY_URL: ${NOTIFICATION_GATEWAY_URL:-}
+      NOTIFICATION_GATEWAY_TOKEN: ${NOTIFICATION_GATEWAY_TOKEN:-}
+    ports: ["127.0.0.1:${API_PORT:-4000}:4000"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+      minio-init: { condition: service_completed_successfully }
+    networks: [backend]
+  worker:
+    build: { context: ., dockerfile: infrastructure/docker/worker.Dockerfile }
+    restart: unless-stopped
+    environment: *service-environment
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+      minio-init: { condition: service_completed_successfully }
+      clamav: { condition: service_healthy }
+    networks: [backend]
+networks: { backend: { driver: bridge } }
+volumes: { postgres-data: {}, redis-data: {}, minio-data: {}, clamav-data: {} }

@@ -1,0 +1,2 @@
+import Link from"next/link";
+export function PublicHeader(){return <header className="public-header"><Link className="brand" href="/"><span className="brand-mark"><span/><span/></span><span>Pulihkan<span>Aku</span></span></Link><nav aria-label="Navigasi publik"><Link href="/pekerjaan">Pekerjaan</Link><Link href="/panduan">Panduan aman</Link><Link href="/rencana-penghasilan">Rencana penghasilan</Link><Link href="/langganan">Paket</Link></nav><Link className="primary-button" href="/masuk">Masuk</Link></header>}

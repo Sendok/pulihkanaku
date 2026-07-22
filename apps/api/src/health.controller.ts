@@ -1,2 +1,2 @@
-import{Controller,Get}from"@nestjs/common";
-@Controller("health")export class HealthController{@Get("live")live(){return{status:"ok",service:"api"}}@Get("ready")ready(){return{status:"ready",service:"api"}}}
+import{Controller,Get,Inject,ServiceUnavailableException}from"@nestjs/common";import type{Pool}from"pg";import type{Redis}from"ioredis";import{ObjectStorageService,POSTGRES,REDIS}from"./infrastructure.module.js";
+@Controller("health")export class HealthController{constructor(@Inject(POSTGRES)private readonly pool:Pool,@Inject(REDIS)private readonly redis:Redis,private readonly storage:ObjectStorageService){}@Get("live")live(){return{status:"ok",service:"api"}}@Get("ready")async ready(){const checks=await Promise.allSettled([this.pool.query("select 1"),this.redis.ping(),this.storage.ready()]);if(checks.some(x=>x.status==="rejected"))throw new ServiceUnavailableException("Service dependencies are not ready.");return{status:"ready",service:"api"}}}

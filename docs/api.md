@@ -58,3 +58,14 @@ Konflik versi atau state mengembalikan HTTP 409. Audit log ditulis pada batch da
   }
 }
 ```
+
+## Messaging, notification, risk, support, dan content
+
+- `POST /api/v1/conversations` dan `GET /api/v1/conversations` — conversation berbasis assignment dengan participant authorization.
+- `GET|POST /api/v1/conversations/:id/messages` — cursor pagination, idempotency key, moderation, notification fan-out.
+- `GET /api/v1/conversations/stream` — SSE realtime yang didistribusikan melalui Redis pub/sub.
+- `GET /api/v1/notifications`, `PATCH /api/v1/notifications/:id/read`, dan notification preferences.
+- `GET /api/v1/admin/risk-cases`, `POST /api/v1/admin/risk-cases/:id/resolve`.
+- `GET|POST /api/v1/support/tickets` — support queue dengan SLA escalation.
+- `GET /api/v1/content`, `GET /api/v1/content/:slug`, serta admin create/update dengan optimistic version.
+- `GET /api/v1/subscription-plans` — katalog read-only. Checkout tidak tersedia sampai billing provider disetujui.

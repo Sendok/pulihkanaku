@@ -41,6 +41,7 @@ next-env.d.ts
 *.tsbuildinfo
 /dist/
 apps/**/dist/
+packages/**/dist/
 /.wrangler/
 /outputs/
 /work/

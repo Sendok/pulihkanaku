@@ -339,3 +339,23 @@ export const auditLogs = sqliteTable("audit_logs", {
   reason: text("reason"),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 }, (table) => [index("audit_entity_idx").on(table.entityType, table.entityId), index("audit_created_idx").on(table.createdAt)]);
+
+export const contentEntries = sqliteTable("content_entries", {
+  id: text("id").primaryKey(), slug: text("slug").notNull(), type: text("type").notNull(), title: text("title").notNull(),
+  summary: text("summary").notNull(), body: text("body").notNull(), status: text("status").notNull().default("DRAFT"),
+  publishedAt: integer("published_at", { mode: "timestamp_ms" }), authorUserId: text("author_user_id").notNull().references(() => users.id),
+  version: integer("version").notNull().default(1), ...timestamps,
+}, (table) => [uniqueIndex("content_slug_idx").on(table.slug), index("content_status_idx").on(table.status, table.publishedAt)]);
+
+export const subscriptionPlans = sqliteTable("subscription_plans", {
+  id: text("id").primaryKey(), code: text("code").notNull(), name: text("name").notNull(), audience: text("audience").notNull(),
+  priceAmount: integer("price_amount").notNull(), currency: text("currency").notNull().default("IDR"), interval: text("interval").notNull(),
+  features: text("features", { mode: "json" }).$type<string[]>().notNull().default([]), status: text("status").notNull().default("ACTIVE"), ...timestamps,
+}, (table) => [uniqueIndex("subscription_plan_code_idx").on(table.code)]);
+
+export const subscriptions = sqliteTable("subscriptions", {
+  id: text("id").primaryKey(), userId: text("user_id").references(() => users.id), businessId: text("business_id").references(() => businesses.id),
+  planId: text("plan_id").notNull().references(() => subscriptionPlans.id), status: text("status").notNull(), providerReference: text("provider_reference"),
+  currentPeriodStart: integer("current_period_start", { mode: "timestamp_ms" }).notNull(), currentPeriodEnd: integer("current_period_end", { mode: "timestamp_ms" }).notNull(),
+  cancelAtPeriodEnd: integer("cancel_at_period_end", { mode: "boolean" }).notNull().default(false), ...timestamps,
+}, (table) => [index("subscription_owner_idx").on(table.userId, table.businessId, table.status)]);

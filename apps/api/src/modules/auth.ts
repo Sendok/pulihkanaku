@@ -70,6 +70,7 @@ export class AuthService {
     if (!valid) {
       const failures = row.failed_attempts + 1;
       await this.pool.query(`update user_credentials set failed_attempts=$2,locked_until=case when $2>=5 then now()+interval '15 minutes' else null end,updated_at=now() where user_id=$1`, [row.id, failures]);
+      await this.queue.add("risk.record",{userId:row.id,type:"LOGIN_FAILURE",severity:failures>=5?"HIGH":"LOW",score:failures>=5?65:10,source:"AUTH",fingerprint:sha256(`login:${row.id}:${Math.floor(Date.now()/900000)}:${failures}`),metadata:{failures}});
       throw new UnauthorizedException("Email/telepon atau kata sandi tidak valid.");
     }
     const client = await this.pool.connect();
@@ -87,7 +88,7 @@ export class AuthService {
     const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
     await this.pool.query(`insert into otp_requests(id,identifier_hash,channel,purpose,code_hash,expires_at,last_sent_at) values($1,$2,$3,$4,$5,now()+($6*interval '1 second'),now())`, [id, identifierHash, body.channel, body.purpose, otpHash(id, identifier, code), Number(process.env.OTP_TTL_SECONDS ?? 300)]);
     await this.queue.add("notification.send-otp", { otpRequestId: id, identifier, channel: body.channel, code, purpose: body.purpose }, { jobId: `otp:${id}`, removeOnComplete: true });
-    return { requestId: id, expiresInSeconds: Number(process.env.OTP_TTL_SECONDS ?? 300), ...(process.env.NODE_ENV === "development" ? { developmentCode: code } : {}) };
+    return { requestId: id, expiresInSeconds: Number(process.env.OTP_TTL_SECONDS ?? 300), ...(process.env.NODE_ENV !== "production" ? { developmentCode: code } : {}) };
   }
   async verifyOtp(body: VerifyOtpDto) {
     const identifier = normalizeIdentifier(body.identifier); const identifierHash = sha256(identifier);
@@ -95,7 +96,7 @@ export class AuthService {
     const row = result.rows[0]; const max = Number(process.env.OTP_MAX_ATTEMPTS ?? 5);
     if (!row || row.consumed_at || row.expires_at <= new Date() || row.attempts >= max) throw new BadRequestException("OTP tidak valid atau kedaluwarsa.");
     const expected = otpHash(row.id, identifier, body.code); const valid = timingSafeEqual(Buffer.from(expected), Buffer.from(row.code_hash));
-    if (!valid) { await this.pool.query(`update otp_requests set attempts=attempts+1 where id=$1`, [row.id]); throw new BadRequestException("OTP tidak valid atau kedaluwarsa."); }
+    if (!valid) { await this.pool.query(`update otp_requests set attempts=attempts+1 where id=$1`, [row.id]); if(row.attempts+1>=max)await this.queue.add("risk.record",{type:"OTP_BRUTE_FORCE",severity:"HIGH",score:70,source:"AUTH",referenceId:row.id,fingerprint:sha256(`otp:${row.id}`),metadata:{identifierHash}}); throw new BadRequestException("OTP tidak valid atau kedaluwarsa."); }
     await this.pool.query(`update otp_requests set consumed_at=now() where id=$1 and consumed_at is null`, [row.id]);
     if (body.purpose === "CONTACT_VERIFICATION") {
       const field = identifier.includes("@") ? "email_verified_at" : "phone_verified_at";

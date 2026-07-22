@@ -18,7 +18,7 @@ export async function GET(request: Request) {
       startsAt: jobs.startsAt, endsAt: jobs.endsAt, payAmount: jobs.payAmount,
       workerCount: jobs.workerCount, status: jobs.status, fundingStatus: jobs.fundingStatus,
     }).from(jobs).innerJoin(businesses, eq(jobs.businessId, businesses.id))
-      .where(eq(jobs.city, city)).orderBy(asc(jobs.startsAt)).limit(30);
+      .where(and(eq(jobs.city, city),eq(jobs.status,"PUBLISHED"),eq(jobs.fundingStatus,"FUNDED"),eq(businesses.verificationStatus,"VERIFIED"))).orderBy(asc(jobs.startsAt)).limit(30);
     return ok({ items: rows, nextCursor: null });
   } catch {
     return fail("DATABASE_UNAVAILABLE", "Daftar pekerjaan belum dapat dimuat. Silakan coba kembali.", reqId, 503);

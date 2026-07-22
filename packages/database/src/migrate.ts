@@ -1,0 +1,2 @@
+import{migrate}from"drizzle-orm/node-postgres/migrator";import{createPostgresDatabase}from"./index.js";
+const databaseUrl=process.env.DATABASE_URL;if(!databaseUrl)throw new Error("DATABASE_URL_MISSING");const{db,pool}=createPostgresDatabase(databaseUrl,2);try{await migrate(db,{migrationsFolder:new URL("../migrations",import.meta.url).pathname});console.log("PostgreSQL migrations applied.")}finally{await pool.end()}
