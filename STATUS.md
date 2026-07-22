@@ -27,19 +27,23 @@ Terakhir diperbarui: 22 Juli 2026 (Asia/Jakarta)
 - Login/register PulihkanAku tanpa GPT, PBKDF2 password hashing, opaque server session, secure cookie, rate limit, temporary account lock, device session list, single/all-device logout, dan audit login.
 - Membership-backed business role, payout account onboarding terenkripsi, serta maintenance endpoint untuk reminder dan expiry verifikasi.
 - Fondasi pnpm/Turborepo, bootstrap NestJS API, BullMQ worker, PostgreSQL/Drizzle adapter, shared environment validation, Docker Compose PostgreSQL/Redis/MinIO, dan container API/worker.
+- Schema PostgreSQL 25 tabel dan migration SQL untuk identity, membership, verification, job, assignment, attendance/evidence, payment/payout, ledger, reconciliation, dispute, notification, webhook inbox, dan audit.
+- NestJS REST v1 untuk auth normal, profil worker, jobs, applications, assignments, attendance, payments, payouts, disputes, upload dokumen, webhook, serta rekonsiliasi; dilengkapi DTO validation, request ID, error envelope, ownership/RBAC, OpenAPI, dan contract test.
+- Redis rate limiting/cache, BullMQ retry/scheduler, serta adapter MinIO presigned upload dengan verifikasi metadata objek sebelum diproses.
+- OTP contact verification/account recovery asynchronous dengan HMAC hash, expiry, resend cooldown, attempt limit, one-time recovery token, reset password, pencabutan sesi, serta notification adapters.
+- ClamAV asynchronous malware scan untuk dokumen verifikasi dan evidence; objek terinfeksi ditandai lalu dihapus dari bucket privat.
+- Adapter payout Xendit domestik Indonesia, idempotency key, exponential retry, terminal/transient failure handling, token-verified webhook inbox, ledger settlement, mismatch detection, dan manual reconciliation UI ber-audit.
 
 ## Sedang dikerjakan berikutnya
 
-- Migrasi module domain dan schema lengkap dari D1 preview ke service NestJS/PostgreSQL hingga contract parity.
-- Integrasi queue BullMQ, Redis rate limiting/cache, dan MinIO document adapter ke workflow nyata.
-- OTP untuk verifikasi kontak/pemulihan akun dan malware scanner asynchronous.
-- Payout provider berizin, webhook production, retry queue, failure handling, dan manual reconciliation UI.
+- Menjalankan migration dan integration test terhadap service container nyata setelah Docker daemon tersedia.
+- Mengaktifkan credential notification/provider live, merchant approval, serta mencatat referensi izin provider yang diverifikasi saat go-live.
+- Cutover traffic dari adapter D1 preview ke service PostgreSQL setelah staging soak test dan backup/restore drill.
 
 ## Belum selesai
 
-- Payment/payout provider nyata, webhook, ledger, rekonsiliasi.
 - Messaging realtime, notification adapters, dispute, risk engine penuh.
 - E2E Playwright, integration/security tests, Docker production, CI, backup/restore.
 - Halaman publik dinamis, CMS, PWA offline, subscription, dan rencana penghasilan.
 
-Hosted preview memiliki backend D1/R2 yang berfungsi. Service PostgreSQL/NestJS mandiri masih dalam migrasi bertahap dan belum diklaim production-complete.
+Hosted preview memiliki backend D1/R2 yang berfungsi. Implementasi service PostgreSQL/NestJS dan worker telah build/typecheck/contract-test, tetapi belum diklaim live-production: Docker daemon lokal tidak tersedia untuk integration run dan aktivasi finansial masih memerlukan credential merchant serta verifikasi izin/status provider dari sumber resmi pada waktu go-live.
