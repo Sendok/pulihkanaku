@@ -1,4 +1,4 @@
-import { Controller, Get, Header, Headers, Injectable, MiddlewareConsumer, NestMiddleware, ServiceUnavailableException, UnauthorizedException } from "@nestjs/common";
+import { Controller, Get, Header, Headers, Injectable, MiddlewareConsumer, NestMiddleware, RequestMethod, ServiceUnavailableException, UnauthorizedException } from "@nestjs/common";
 import type { NextFunction, Request, Response } from "express";
 import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 
@@ -30,5 +30,5 @@ export class ObservabilityController {
   @Get("metrics") @Header("content-type","text/plain; version=0.0.4; charset=utf-8") @Header("cache-control","no-store") metricsEndpoint(@Headers("authorization") authorization?:string){const expected=process.env.METRICS_TOKEN;if(process.env.NODE_ENV==="production"&&!expected)throw new ServiceUnavailableException("Metrics token is not configured.");if(expected&&(!authorization||!secure(authorization,`Bearer ${expected}`)))throw new UnauthorizedException();return this.metrics.render()}
 }
 
-export function configureObservability(consumer:MiddlewareConsumer){consumer.apply(ObservabilityMiddleware).forRoutes("*")}
+export function configureObservability(consumer:MiddlewareConsumer){consumer.apply(ObservabilityMiddleware).forRoutes({path:"{*path}",method:RequestMethod.ALL})}
 export function reportProcessError(event:string,error:unknown){const fields={message:error instanceof Error?error.message:String(error),stack:process.env.NODE_ENV==="production"?undefined:error instanceof Error?error.stack:undefined};jsonLog("error",event,fields)}

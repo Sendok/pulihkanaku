@@ -1,13 +1,16 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { access, readFile } from "node:fs/promises";
+import { loadEnvFile } from "node:process";
 import test from "node:test";
 
 const cwd = new URL("../", import.meta.url).pathname;
 const baseUrl = "http://localhost:3011";
+try { loadEnvFile(new URL("../.env", import.meta.url)); } catch (error) { if (error?.code !== "ENOENT") throw error; }
+const e2eCronSecret = process.env.CRON_SECRET ?? "local-cron-secret";
 
 function startServer() {
-  const child = spawn(new URL("../node_modules/.bin/vinext", import.meta.url).pathname, ["dev", "--port", "3011"], { cwd, env: { ...process.env, NODE_ENV: "development", WRANGLER_LOG_PATH: ".wrangler/wrangler-e2e.log" }, stdio: ["ignore", "pipe", "pipe"] });
+  const child = spawn(new URL("../node_modules/.bin/vinext", import.meta.url).pathname, ["dev", "--port", "3011"], { cwd, env: { ...process.env, NODE_ENV: "development", CRON_SECRET: e2eCronSecret, WRANGLER_LOG_PATH: ".wrangler/wrangler-e2e.log" }, stdio: ["ignore", "pipe", "pipe"] });
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error("Development server did not start in time.")), 30_000);
     const onData = (chunk) => {
@@ -65,7 +68,7 @@ test("funded job completes worker-to-payout workflow", { timeout: 60_000 }, asyn
     const reviewed=await api(`/api/v1/verifications/${verificationPayload.data.id}/review`,{user:"admin@pulihkanaku.local",body:{decision:"APPROVE",expectedVersion:1,expiryDays:365}});assert.equal(reviewed.status,"APPROVED");
     const payoutAccount=await api("/api/v1/payout-accounts",{headers:{cookie:authCookie},body:{bankCode:"BRI",accountName:"Rina Puspita",accountNumber:"123456789012"}});assert.deepEqual({bank:payoutAccount.bankCode,lastFour:payoutAccount.lastFour,status:payoutAccount.status},{bank:"BRI",lastFour:"9012",status:"PENDING_VERIFICATION"});
     const payoutAccountResponse=await fetch(`${baseUrl}/api/v1/payout-accounts`,{headers:{cookie:authCookie}});const payoutAccountPayload=await payoutAccountResponse.json();assert.equal(payoutAccountPayload.success,true);assert.equal("account_number_encrypted" in payoutAccountPayload.data.account,false);
-    const maintenance=await api("/api/v1/internal/verification-maintenance",{headers:{authorization:"Bearer local-cron-secret"}});assert.equal(typeof maintenance.verificationsExpired,"number");
+    const maintenance=await api("/api/v1/internal/verification-maintenance",{headers:{authorization:`Bearer ${e2eCronSecret}`}});assert.equal(typeof maintenance.verificationsExpired,"number");
     const created = await api("/api/v1/jobs", { user: business, body: { title: `E2E Packing ${Date.now()}`, payAmount: 160000, category: "Gudang", city: "Tulungagung", district: "Kedungwaru", workerCount: 1, businessId: "business_kirana" } });
     assert.equal(created.status, "DRAFT");
     await api(`/api/v1/jobs/${created.id}/transition`, { user: business, body: { to: "PENDING_VERIFICATION", expectedVersion: 1 } });

@@ -37,10 +37,10 @@ services:
     entrypoint: ["/bin/sh", "-c", "mc alias set local http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD && mc mb --ignore-existing local/pulihkanaku-private && mc anonymous set none local/pulihkanaku-private"]
     networks: [backend]
   clamav:
-    image: clamav/clamav:1.4
+    image: clamav/clamav-debian:1.4
     restart: unless-stopped
     volumes: ["clamav-data:/var/lib/clamav"]
-    healthcheck: { test: ["CMD", "/usr/local/bin/clamdcheck.sh"], interval: 30s, timeout: 10s, retries: 20, start_period: 120s }
+    healthcheck: { test: ["CMD-SHELL", "clamdcheck.sh"], interval: 30s, timeout: 10s, retries: 20, start_period: 180s }
     networks: [backend]
   migrate:
     build: { context: ., dockerfile: infrastructure/docker/api.Dockerfile }

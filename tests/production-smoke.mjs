@@ -11,7 +11,7 @@ async function json(path) {
 assert.equal((await json("/health/live")).status, "ok");
 assert.equal((await json("/health/ready")).status, "ready");
 const invalid = await fetch(`${base}/auth/login`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ identifier: "invalid", password: "invalid" }), signal: AbortSignal.timeout(10_000) });
-assert.equal(invalid.status, 400);
+assert.equal(invalid.status, 401);
 const invalidBody = await invalid.json();
 assert.equal(invalidBody.success, false);
 assert.ok(invalidBody.error.requestId);

@@ -79,15 +79,25 @@ export class AuthService {
   async requestOtp(body: RequestOtpDto, ip: string) {
     const identifier = normalizeIdentifier(body.identifier);
     const identifierHash = sha256(identifier);
-    const rate = await this.limits.consume(`otp:${identifierHash}:${sha256(ip)}`, 5, 3600);
+    const hourlyScope = `otp:${identifierHash}:${sha256(ip)}`;
+    const cooldownScope = `otp-cooldown:${identifierHash}:${body.purpose}`;
+    const rate = await this.limits.consume(hourlyScope, 5, 3600);
     if (!rate.allowed) throw new TooManyRequestsException("Batas pengiriman OTP tercapai. Coba lagi nanti.");
-    const cooldown = await this.limits.consume(`otp-cooldown:${identifierHash}:${body.purpose}`, 1, Number(process.env.OTP_RESEND_COOLDOWN_SECONDS ?? 60));
+    const cooldown = await this.limits.consume(cooldownScope, 1, Number(process.env.OTP_RESEND_COOLDOWN_SECONDS ?? 60));
     if (!cooldown.allowed) throw new TooManyRequestsException("Tunggu sebelum meminta OTP baru.");
     if (body.purpose === "ACCOUNT_RECOVERY") await this.pool.query(`select id from users where lower(email)=$1 or phone_e164=$2 limit 1`, [identifier, `+${identifier}`]);
     const id = randomUUID();
     const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
     await this.pool.query(`insert into otp_requests(id,identifier_hash,channel,purpose,code_hash,expires_at,last_sent_at) values($1,$2,$3,$4,$5,now()+($6*interval '1 second'),now())`, [id, identifierHash, body.channel, body.purpose, otpHash(id, identifier, code), Number(process.env.OTP_TTL_SECONDS ?? 300)]);
-    await this.queue.add("notification.send-otp", { otpRequestId: id, identifier, channel: body.channel, code, purpose: body.purpose }, { jobId: `otp:${id}`, removeOnComplete: true });
+    try {
+      await this.queue.add("notification.send-otp", { otpRequestId: id, identifier, channel: body.channel, code, purpose: body.purpose }, { jobId: `otp-${id}`, removeOnComplete: true });
+    } catch (error) {
+      await Promise.all([
+        this.pool.query(`delete from otp_requests where id=$1`, [id]),
+        this.limits.clear(hourlyScope, cooldownScope),
+      ]);
+      throw error;
+    }
     return { requestId: id, expiresInSeconds: Number(process.env.OTP_TTL_SECONDS ?? 300), ...(process.env.NODE_ENV !== "production" ? { developmentCode: code } : {}) };
   }
   async verifyOtp(body: VerifyOtpDto) {

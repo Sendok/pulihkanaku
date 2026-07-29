@@ -19,6 +19,9 @@ export class RateLimitService {
     if (count === 1) await this.redis.expire(key, windowSeconds);
     return { allowed: count <= limit, remaining: Math.max(0, limit - count) };
   }
+  clear(...scopes: string[]) {
+    return scopes.length ? this.redis.del(...scopes.map(scope => `rate:${scope}`)) : Promise.resolve(0);
+  }
   async cached<T>(key: string, ttlSeconds: number, loader: () => Promise<T>): Promise<T> {
     const cached = await this.redis.get(`cache:${key}`);
     if (cached) return JSON.parse(cached) as T;
